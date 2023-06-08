@@ -71,10 +71,10 @@ tmp<volScalarField> kEpsilonEB<BasicTurbulenceModel>::Ts() const
         sqrt
         (   
             //sqr(k_/epsilon_)+sqr(Ct_)*this->nu()/epsilon_
-            
             max
             (
-                sqr(k_/epsilon_)+sqr(Ct_)*this->nu()/epsilon_,
+            sqr(k_/epsilon_) + sqr(Ct_)*max(this->nu()/epsilon_,
+                dimensionedScalar(sqr(dimTime), Zero) ),
                 dimensionedScalar(sqr(dimTime), Zero)
             )
             
@@ -86,7 +86,7 @@ template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonEB<BasicTurbulenceModel>::Ls() const
 {
     return
-    
+        /*
         CL_*max
         (
             pow(k_, 1.5)/epsilon_,
@@ -102,17 +102,17 @@ tmp<volScalarField> kEpsilonEB<BasicTurbulenceModel>::Ls() const
                 )/epsilon_
             )
         );
-        /*
+        */
        CL_*sqrt(max
        (
-        pow3(k_)/sqr(epsilon_) + Ceta_*sqrt(max
+        pow3(k_)/sqr(epsilon_) + sqr(Ceta_)*sqrt(max
         (
             pow3(this->nu())/epsilon_,
             dimensionedScalar(pow(dimLength,4), Zero)
         )),
         dimensionedScalar(sqr(dimLength), Zero)
        ));
-       */
+       
 }
 
 

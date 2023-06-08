@@ -69,15 +69,17 @@ tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ts() const
         );
     */
         sqrt
-        (   
+        ( 
+            sqr(k_/epsilon_) + sqr(Ct_)*max(this->nu()/epsilon_,
+                dimensionedScalar(sqr(dimTime), Zero) )
             //sqr(k_/epsilon_)+sqr(Ct_)*this->nu()/epsilon_
-            
+            /*
             max
             (
                 sqr(k_/epsilon_)+sqr(Ct_)*this->nu()/epsilon_,
                 dimensionedScalar(sqr(dimTime), Zero)
             )
-            
+            */
         );
 }
 
@@ -86,7 +88,7 @@ template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ls() const
 {
     return
-    
+        /*
         CL_*max
         (
             pow(k_, 1.5)/epsilon_,
@@ -102,17 +104,17 @@ tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ls() const
                 )/epsilon_
             )
         );
-        /*
+        */
        CL_*sqrt(max
        (
-        pow3(k_)/sqr(epsilon_) + Ceta_*sqrt(max
+        pow3(k_)/sqr(epsilon_) + sqr(Ceta_)*sqrt(max
         (
             pow3(this->nu())/epsilon_,
             dimensionedScalar(pow(dimLength,4), Zero)
         )),
         dimensionedScalar(sqr(dimLength), Zero)
        ));
-       */
+       
 }
 
 
@@ -552,13 +554,13 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
       + fvm::div(alphaRhoPhi, epsilon_)
       - fvm::laplacian(alpha*rho*DepsilonEff(), epsilon_)
       ==
-        alpha()*rho()*Ceps1_*G()/T_()
+        alpha()*rho()*Ceps1_*G()/k_()*epsilon_()
       - fvm::SuSp
         (
             (2.0/3.0*Ceps1_)*(alpha()*rho()*divU),
             epsilon_
         )
-      - fvm::Sp(alpha()*rho()*Ceps2_/T_(), epsilon_)
+      - fvm::Sp(alpha()*rho()*Ceps2_/k_()*epsilon_(), epsilon_)
       + alpha()*rho()*E()
       + fvOptions(alpha, rho, epsilon_)
     );
@@ -657,14 +659,14 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
             (
                 (2.0-Ceps1_)*G()/k_()
               - (2.0-Ceps1_)*(2.0/3.0)*divU
-              + (Ceps2_+4.0-1.0/Cmu_)*(1-pow3(ebf_()))/T_()
-              + pow3(ebf_())/T_()*(C1_+Ceps2_-2.0+C1s_*(G()-(2.0/3.0)*divU*k_())/epsilon_())
+              + (Ceps2_+4.0-1.0/Cmu_)*(1-pow3(ebf_()))/k_()*epsilon_()
+              + pow3(ebf_())/k_()*epsilon_()*(C1_+Ceps2_-2.0+C1s_*(G()-(2.0/3.0)*divU*k_())/epsilon_())
               + pow3(ebf_())*C3s_/sqrt(2.0)*mag(S())
             )
           , phit_
         )
-        + alpha()*rho()*pow3(ebf_())*(2.0/3.0-C3_/2.0)/Cmu_/T_()*(mag(S())*T_()+pow3(ebf_()))/(max(mag(S())*T_(),1.87))
-        + alpha()*rho()*pow3(ebf_())/T_()/magSqr(S())*((2.0/Cmu_*(1.0-C4_)*(A()&S()) - 2.0/Cmu_*(1.0-C5_)*(A()&W()))&&S())
+        + alpha()*rho()*pow3(ebf_())*(2.0/3.0-C3_/2.0)/Cmu_/k_()*epsilon_()*(mag(S())*k_()/epsilon_()+pow3(ebf_()))/(max(mag(S())*k_()/epsilon_(),1.87))
+        + alpha()*rho()*pow3(ebf_())/k_()*epsilon_()/magSqr(S())*((2.0/Cmu_*(1.0-C4_)*(A()&S()) - 2.0/Cmu_*(1.0-C5_)*(A()&W()))&&S())
       + fvOptions(alpha, rho, phit_)
     );
 
