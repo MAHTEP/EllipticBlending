@@ -41,7 +41,6 @@ namespace RASModels
 template<class BasicTurbulenceModel>
 void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
 {
-    // (LUU:p. 173)
     this->nut_ = Cmu_*phit_*k_*T_;
     this->nut_.correctBoundaryConditions();
     fv::options::New(this->mesh_).correct(this->nut_);
@@ -66,7 +65,6 @@ template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ls() const
 {
     return
-
        CL_*sqrt(max
        (
         pow3(k_)/sqr(epsilon_) + sqr(Ceta_)*sqrt(max

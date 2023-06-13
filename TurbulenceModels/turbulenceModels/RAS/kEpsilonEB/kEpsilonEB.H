@@ -139,13 +139,8 @@ protected:
             dimensionedScalar C2_;
             dimensionedScalar CK_;
             dimensionedScalar Ct_;
-            dimensionedScalar Ceps1a_;
-            dimensionedScalar Ceps1b_;
-            dimensionedScalar Ceps1c_;
-            dimensionedScalar Ceps1;
+            dimensionedScalar Ceps1_;
             dimensionedScalar Ceps2_;
-            dimensionedScalar Cf1_;
-            dimensionedScalar Cf2_;
             dimensionedScalar CL_;
             dimensionedScalar Ceta_;
             dimensionedScalar CT_;
@@ -257,17 +252,6 @@ public:
         //- Return the effective diffusivity for phit (LUU:Eq. 17)
         tmp<volScalarField> DphitEff() const
         {
-            /*
-            auto tfld =
-                tmp<volScalarField>::New("DphitEff", this->nut_/sigmaPhit_);
-
-            if (includeNu_)
-            {
-                tfld.ref() += this->nu()/2;
-            }
-
-            return tfld;
-            */
             return tmp<volScalarField>
             (
                 new volScalarField
