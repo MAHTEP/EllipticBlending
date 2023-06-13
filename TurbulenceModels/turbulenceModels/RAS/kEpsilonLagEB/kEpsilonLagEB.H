@@ -59,12 +59,7 @@ Description
         {
             includeNu   true;    // include nu in (LUU: Eq. 17), see Notes
             Cmu         0.22;    // Turbulent viscosity constant
-            Ceps1a      1.4;     // Model constant for epsilon
-            Ceps1b      1.0;     // Model constant for epsilon
-            Ceps1c      0.05;    // Model constant for epsilon
             Ceps2       1.9;     // Model constant for epsilon
-            Cf1         1.4;     // Model constant for f
-            Cf2         0.3;     // Model constant for f
             CL          0.25;    // Model constant for L
             Ceta        110.0;   // Model constant for L
             CT          6.0;     // Model constant for T
@@ -136,7 +131,6 @@ protected:
 
             dimensionedScalar Cmu_;
             dimensionedScalar C1_;
-            dimensionedScalar C2_;
             dimensionedScalar C3_;
             dimensionedScalar C4_;
             dimensionedScalar C5_;
@@ -144,9 +138,6 @@ protected:
             dimensionedScalar C3s_;
             dimensionedScalar CK_;
             dimensionedScalar Ct_;
-            dimensionedScalar Ceps1a_;
-            dimensionedScalar Ceps1b_;
-            dimensionedScalar Ceps1c_;
             dimensionedScalar Ceps1_;
             dimensionedScalar Ceps2_;
             dimensionedScalar CL_;
@@ -260,17 +251,6 @@ public:
         //- Return the effective diffusivity for phit (LUU:Eq. 17)
         tmp<volScalarField> DphitEff() const
         {
-            /*
-            auto tfld =
-                tmp<volScalarField>::New("DphitEff", this->nut_/sigmaPhit_);
-
-            if (includeNu_)
-            {
-                tfld.ref() += this->nu()/2;
-            }
-
-            return tfld;
-            */
             return tmp<volScalarField>
             (
                 new volScalarField
