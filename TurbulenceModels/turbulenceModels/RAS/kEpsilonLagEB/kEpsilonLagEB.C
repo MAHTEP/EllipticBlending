@@ -65,16 +65,10 @@ template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ls() const
 {
     return
-       CL_*sqrt(max
-       (
-        pow3(k_)/sqr(epsilon_) + sqr(Ceta_)*sqrt(max
-        (
-            pow3(this->nu())/epsilon_,
-            dimensionedScalar(pow(dimLength,4), Zero)
-        )),
-        dimensionedScalar(sqr(dimLength), Zero)
-       ));
-       
+       CL_*sqrt(
+        max(pow3(k_)/sqr(epsilon_), dimensionedScalar(sqr(dimLength), Zero))
+        + sqr(Ceta_)*sqrt(max(pow3(this->nu())/epsilon_,dimensionedScalar(pow(dimLength,4), Zero)))
+       );
 }
 
 
@@ -430,17 +424,18 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
  
    // compute strain, vorticity and anisotropy tensors
     tmp<volTensorField> tgradU = fvc::grad(U);
+    // Mean strain tensor
     volTensorField S
     (
         0.5*(tgradU() + tgradU().T())
     );
-    // vorticity tensor
+    // Mean vorticity tensor
     volTensorField W
     (
         0.5*(tgradU() - tgradU().T())
     );
 
-    // anisotropy tensor (quadratic constitutive relation)
+    // Anisotropy tensor (quadratic constitutive relation)
     volTensorField A
     (
         -2*nut/k_*(S + 2.0*(2.0-2.0*C5_)/(C1_+C1s_+1.0)*((S&W)-(W&S))/(mag(S+W)))
@@ -469,10 +464,13 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
       + fvm::div(alphaRhoPhi, epsilon_)
       - fvm::laplacian(alpha*rho*DepsilonEff(), epsilon_)
       ==
-        alpha()*rho()*Ceps1_*G()/k_()*epsilon_()
       - fvm::SuSp
-        (
-            (2.0/3.0*Ceps1_)*(alpha()*rho()*divU),
+        (   
+            alpha()*rho()*Ceps1_*
+            (
+                - G()/k_()
+                + 2.0/3.0*divU 
+            ),
             epsilon_
         )
       - fvm::Sp(alpha()*rho()*Ceps2_/k_()*epsilon_(), epsilon_)
@@ -498,7 +496,8 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
       ==
         alpha()*rho()*G()
       - fvm::SuSp(2.0/3.0*alpha()*rho()*divU, k_)
-      - fvm::Sp(alpha()*rho()*(1.0/T_()), k_)
+      - fvm::Sp(alpha()*rho()*1.0/(k_/epsilon_()), k_)
+      // - alpha()*rho()*epsilon_()
       + fvOptions(alpha, rho, k_)
     );
 
