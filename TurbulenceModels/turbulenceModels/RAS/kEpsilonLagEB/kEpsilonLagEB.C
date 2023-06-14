@@ -41,7 +41,7 @@ namespace RASModels
 template<class BasicTurbulenceModel>
 void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
 {
-    this->nut_ = Cmu_*phit_*k_*T_;
+    this->nut_ = Cmu_*phit_*k_*T_; // min(T_, 1.0/(Cmu_*sqrt(3.0)*phit_*sqrt(2*symm(fvc::grad(this->U_))&&symm(fvc::grad(this->U_)))));
     this->nut_.correctBoundaryConditions();
     fv::options::New(this->mesh_).correct(this->nut_);
 
@@ -325,8 +325,8 @@ kEpsilonLagEB<BasicTurbulenceModel>::kEpsilonLagEB
         dimensionedScalar(dimTime, Zero)
     ),
 
-    phitMin_(dimensionedScalar("phitMin", phit_.dimensions(), SMALL)),
-    ebfMin_(dimensionedScalar("ebfMin", ebf_.dimensions(), SMALL)),
+    phitMin_(dimensionedScalar("phitMin", phit_.dimensions(), Zero)),
+    ebfMin_(dimensionedScalar("ebfMin", ebf_.dimensions(), Zero)),
     TMin_(dimensionedScalar("TMin", dimTime, SMALL)),
     L2Min_(dimensionedScalar("L2Min", sqr(dimLength), SMALL))
 {
