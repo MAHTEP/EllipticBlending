@@ -70,17 +70,9 @@ Description
     \endverbatim
 
 Note
-    The name of the original variable replacing 'v2' is 'phi' (LUU:Eq. 14).
+    The name of the original variable replacing 'v2' is 'phi'
     However, the name 'phi' preexisted in OpenFOAM; therefore, this name was
     replaced by 'phit' herein.
-
-    Including \c nu in \c DphitEff even though it is not present in (LUU:Eq. 17)
-    provided higher level of resemblance to benchmarks for the tests considered,
-    particularly for the peak skin friction (yet, pressure-related predictions
-    were unaffected). Users can switch off \c nu in \c DphitEff by using
-    \c includeNu entry in \c kEpsilonLagEBCoeffs as shown above in order to
-    follow the reference paper thereat. \c includeNu is left \c true by default.
-    See GitLab issue #1560.
 
 SourceFiles
     kEpsilonLagEB.C
@@ -172,7 +164,6 @@ protected:
             dimensionedScalar ebfMin_;
             dimensionedScalar TMin_;
             dimensionedScalar L2Min_;
-
 
     // Protected Member Functions
 
