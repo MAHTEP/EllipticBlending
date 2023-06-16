@@ -40,9 +40,23 @@ namespace RASModels
 
 template<class BasicTurbulenceModel>
 void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
-{
-    // (LUU:p. 173)
-    this->nut_ = Cmu_*phit_*k_*T_;
+{   
+    volScalarField magS =
+        sqrt(2.0)*mag(symm(fvc::grad(this->U_)));
+
+    this->nut_ = Cmu_*phit_*k_*
+        min
+        (
+            T_, 
+            1.0
+            /
+            max
+            (
+                dimensionedScalar(pow(dimTime,-1),1.0e-10),
+                Cmu_.value()*sqrt(3.0)*phit_*magS
+                    
+            )
+        );
     this->nut_.correctBoundaryConditions();
     fv::options::New(this->mesh_).correct(this->nut_);
 
@@ -54,30 +68,10 @@ template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ts() const
 {
     return
-    /*
-        max
-        (
-            k_/epsilon_,
-            CT_*sqrt
-            (
-                max
-                (
-                    this->nu(),
-                    dimensionedScalar(this->nu()().dimensions(), Zero)
-                )/epsilon_
-            )
-        );
-    */
         sqrt
-        (   
-            //sqr(k_/epsilon_)+sqr(Ct_)*this->nu()/epsilon_
-            
-            max
-            (
-                sqr(k_/epsilon_)+sqr(Ct_)*this->nu()/epsilon_,
-                dimensionedScalar(sqr(dimTime), Zero)
-            )
-            
+        ( 
+            sqr(k_/epsilon_) + sqr(Ct_)*max(this->nu()/epsilon_,
+                dimensionedScalar(sqr(dimTime), Zero) )
         );
 }
 
@@ -86,33 +80,16 @@ template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ls() const
 {
     return
-    
-        CL_*max
-        (
-            pow(k_, 1.5)/epsilon_,
-            Ceta_*pow025
-            (
-                pow3
-                (
-                    max
-                    (
-                        this->nu(),
-                        dimensionedScalar(this->nu()().dimensions(), Zero)
-                    )
-                )/epsilon_
+       CL_*sqrt(
+        max(pow3(k_)/sqr(epsilon_), dimensionedScalar(sqr(dimLength), Zero))
+        + sqr(Ceta_)
+        *sqrt(
+            max(
+                pow3(this->nu())/epsilon_,
+                dimensionedScalar(pow(dimLength,4), Zero)
+                )
             )
-        );
-        /*
-       CL_*sqrt(max
-       (
-        pow3(k_)/sqr(epsilon_) + Ceta_*sqrt(max
-        (
-            pow3(this->nu())/epsilon_,
-            dimensionedScalar(pow(dimLength,4), Zero)
-        )),
-        dimensionedScalar(sqr(dimLength), Zero)
-       ));
-       */
+       );
 }
 
 
@@ -168,15 +145,6 @@ kEpsilonLagEB<BasicTurbulenceModel>::kEpsilonLagEB
             "C1",
             this->coeffDict_,
             1.7
-        )
-    ),
-    C2_
-    (
-        dimensionedScalar::getOrAddToDict
-        (
-            "C2",
-            this->coeffDict_,
-            0.9
         )
     ),
     C3_
@@ -242,33 +210,6 @@ kEpsilonLagEB<BasicTurbulenceModel>::kEpsilonLagEB
             4.0
         )
     ),
-    Ceps1a_
-    (
-        dimensionedScalar::getOrAddToDict
-        (
-            "Ceps1a",
-            this->coeffDict_,
-            1.4
-        )
-    ),
-    Ceps1b_
-    (
-        dimensionedScalar::getOrAddToDict
-        (
-            "Ceps1b",
-            this->coeffDict_,
-            1.0
-        )
-    ),
-    Ceps1c_
-    (
-        dimensionedScalar::getOrAddToDict
-        (
-            "Ceps1c",
-            this->coeffDict_,
-            0.05
-        )
-    ),
     Ceps1_
     (
         dimensionedScalar::getOrAddToDict
@@ -293,7 +234,7 @@ kEpsilonLagEB<BasicTurbulenceModel>::kEpsilonLagEB
         (
             "CL",
             this->coeffDict_,
-            0.25
+            0.164
         )
     ),
     Ceta_
@@ -405,8 +346,8 @@ kEpsilonLagEB<BasicTurbulenceModel>::kEpsilonLagEB
         dimensionedScalar(dimTime, Zero)
     ),
 
-    phitMin_(dimensionedScalar("phitMin", phit_.dimensions(), SMALL)),
-    ebfMin_(dimensionedScalar("ebfMin", ebf_.dimensions(), SMALL)),
+    phitMin_(dimensionedScalar("phitMin", phit_.dimensions(), VSMALL)),
+    ebfMin_(dimensionedScalar("ebfMin", ebf_.dimensions(), Zero)),
     TMin_(dimensionedScalar("TMin", dimTime, SMALL)),
     L2Min_(dimensionedScalar("L2Min", sqr(dimLength), SMALL))
 {
@@ -447,7 +388,6 @@ bool kEpsilonLagEB<BasicTurbulenceModel>::read()
         includeNu_.readIfPresent("includeNu", this->coeffDict());
         Cmu_.readIfPresent(this->coeffDict());
         C1_.readIfPresent(this->coeffDict());
-        C2_.readIfPresent(this->coeffDict());
         C3_.readIfPresent(this->coeffDict());
         C4_.readIfPresent(this->coeffDict());
         C5_.readIfPresent(this->coeffDict());
@@ -455,9 +395,6 @@ bool kEpsilonLagEB<BasicTurbulenceModel>::read()
         C3s_.readIfPresent(this->coeffDict());
         CK_.readIfPresent(this->coeffDict());
         Ct_.readIfPresent(this->coeffDict());
-        Ceps1a_.readIfPresent(this->coeffDict());
-        Ceps1b_.readIfPresent(this->coeffDict());
-        Ceps1c_.readIfPresent(this->coeffDict());
         Ceps1_.readIfPresent(this->coeffDict());
         Ceps2_.readIfPresent(this->coeffDict());
         CL_.readIfPresent(this->coeffDict());
@@ -505,35 +442,52 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     bound(T_, TMin_);
 
     const volScalarField L2(type() + "L2", sqr(Ls()) + L2Min_);
-    /*
-    const volScalarField::Internal Ceps1_
-    (
-        "Ceps1_",
-        Ceps1a_*(Ceps1b_ + Ceps1c_*sqrt(1.0/phit_()))
-    );
-    */
+ 
    // compute strain, vorticity and anisotropy tensors
     tmp<volTensorField> tgradU = fvc::grad(U);
+    // Mean strain tensor
     volTensorField S
     (
         0.5*(tgradU() + tgradU().T())
     );
-    // vorticity tensor
+    // Mean vorticity tensor
     volTensorField W
     (
         0.5*(tgradU() - tgradU().T())
     );
-    // anisotropy tensor (quadratic constitutive relation)
+
+    // Anisotropy tensor (quadratic constitutive relation)
     volTensorField A
     (
-        -2*nut/k_*(S + 2.0*(2.0-2.0*C5_)/(C1_+C1s_+1.0)*((S&W)-(W&S))/mag(S+W))
+        -2*nut/k_*(S + 2.0*(2.0-2.0*C5_)/(C1_+C1s_+1.0)*((S&W)-(W&S))/(mag(S+W)))
     );
     tgradU.clear();
+
+    // Time scale
+    volScalarField tau
+    (
+        k_/epsilon_
+    );
+    // Function for blending phit at wall
+    volScalarField fmu
+    (
+        (sqrt(2.0)*mag(S)*tau + pow3(ebf_)) /
+        max(
+            sqrt(2.0)*mag(S)*tau,1.87
+           )
+    );
+    // Coefficient using fmu
+    volScalarField Cp3
+    (
+         fmu/Cmu_*(2.0/3.0 - C3_/2.0)
+    );
 
     tmp<volVectorField> gradf(fvc::grad(ebf_));
     volVectorField n 
     (
-        fvc::grad(ebf_)/max(mag(fvc::grad(ebf_)), dimensionedScalar(dimless/dimLength, SMALL))
+        fvc::grad(ebf_)/max(
+            mag(fvc::grad(ebf_)), dimensionedScalar(dimless/dimLength, SMALL)
+            )
     );
     gradf.clear();
     volScalarField E
@@ -544,7 +498,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     // Update epsilon and G at the wall
     epsilon_.boundaryFieldRef().updateCoeffs();
 
-    // Turbulent kinetic energy dissipation rate equation (LUU:Eq. 4)
+    // Turbulent kinetic energy dissipation rate equation 
     // k/T ~ epsilon
     tmp<fvScalarMatrix> epsEqn
     (
@@ -552,13 +506,16 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
       + fvm::div(alphaRhoPhi, epsilon_)
       - fvm::laplacian(alpha*rho*DepsilonEff(), epsilon_)
       ==
-        alpha()*rho()*Ceps1_*G()/T_()
       - fvm::SuSp
-        (
-            (2.0/3.0*Ceps1_)*(alpha()*rho()*divU),
+        (   
+            alpha()*rho()*Ceps1_*
+            (
+                - G()/k_()
+                + 2.0/3.0*divU 
+            ),
             epsilon_
         )
-      - fvm::Sp(alpha()*rho()*Ceps2_/T_(), epsilon_)
+      - fvm::Sp(alpha()*rho()*Ceps2_/tau(), epsilon_)
       + alpha()*rho()*E()
       + fvOptions(alpha, rho, epsilon_)
     );
@@ -571,7 +528,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     bound(epsilon_, this->epsilonMin_);
 
 
-    // Turbulent kinetic energy equation (LUU:Eq. 3)
+    // Turbulent kinetic energy equation 
     // epsilon/k ~ 1/Ts
     tmp<fvScalarMatrix> kEqn
     (
@@ -581,7 +538,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
       ==
         alpha()*rho()*G()
       - fvm::SuSp(2.0/3.0*alpha()*rho()*divU, k_)
-      - fvm::Sp(alpha()*rho()*(1.0/T_()), k_)
+      - fvm::Sp(alpha()*rho()/tau(), k_)
       + fvOptions(alpha, rho, k_)
     );
 
@@ -592,28 +549,12 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     bound(k_, this->kMin_);
 
 
-    // Elliptic relaxation function equation (LUU:Eq. 18)
-    // All source terms are non-negative functions (LUU:p. 176)
+// Elliptic blending function equation
     tmp<fvScalarMatrix> ebfEqn
-    /*
-    (
-      - fvm::laplacian(f_)
-      ==
-      - fvm::Sp(1.0/L2(), f_)
-      - (
-            (Cf1_ - 1.0)*(phit_() - 2.0/3.0)/T_()
-           -(Cf2_*G())/k_()
-           +(Cf2_*(2.0/3.0)*divU)
-           -(2.0*this->nu()*(fvc::grad(phit_) & fvc::grad(k_)))()/k_()
-           -(this->nu()*fvc::laplacian(phit_))()
-        )/L2()
-    );
-    */
    (
-    -fvm::laplacian(L2,ebf_) + ebf_
+    -fvm::laplacian(ebf_)
     ==
-    sigmaPhit_
-    //+ 1.0/dimensionedScalar(dimTime,1.0)/L2()
+    -fvm::SuSp(1.0/L2(), ebf_) + 1.0/L2()
    );
 
     ebfEqn.ref().relax();
@@ -622,30 +563,16 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     fvOptions.correct(ebf_);
     bound(ebf_, this->ebfMin_);
 
-    // Normalised wall-normal fluctuating velocity scale equation (LUU:Eq. 17)
-    // All source terms are non-negative functions (LUU:p. 176)
+    // Coefficients to be used in the phitEquation
+    const dimensionedScalar Cws = Ceps2_ - 1.0 + 5.0 - 1.0/Cmu_;
+    const dimensionedScalar C1Tilde = C1_ + Ceps2_ - 2.0;
+    const dimensionedScalar Cp1 = 2.0 - Ceps1_;
+    const dimensionedScalar Cp2 = C3s_/sqrt(2.0);
+    const dimensionedScalar C4s = 2.0/Cmu_*(1.0 - C4_);
+    const dimensionedScalar C5s = 2.0/Cmu_*(1.0 - C5_);
+
+// Reduced stress function
     tmp<fvScalarMatrix> phitEqn
-    /*
-    (
-        fvm::ddt(alpha, rho, phit_)
-      + fvm::div(alphaRhoPhi, phit_)
-      - fvm::laplacian(alpha*rho*DphitEff(), phit_)
-      ==
-        alpha()*rho()*f_()
-      - fvm::SuSp
-        (
-            alpha()*rho()*
-            (
-                G()/k_()
-              - (2.0/3.0)*divU
-              - (2.0*nut*(fvc::grad(phit_) & fvc::grad(k_)))()
-                /(k_()*sigmaPhit_*phit_()) 
-            )
-          , phit_
-        )
-      + fvOptions(alpha, rho, phit_)
-    );
-    */
     (
         fvm::ddt(alpha, rho, phit_)
       + fvm::div(alphaRhoPhi, phit_)
@@ -655,16 +582,20 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
         (
             alpha()*rho()*
             (
-                (2.0-Ceps1_)*G()/k_()
-              - (2.0-Ceps1_)*(2.0/3.0)*divU
-              + (Ceps2_+4.0-1.0/Cmu_)*(1-pow3(ebf_()))/T_()
-              + pow3(ebf_())/T_()*(C1_+Ceps2_-2.0+C1s_*(G()-(2.0/3.0)*divU*k_())/epsilon_())
-              + pow3(ebf_())*C3s_/sqrt(2.0)*mag(S())
+                (1.0 - pow3(ebf_()))*Cws/tau()
+                + pow3(ebf_())*(C1Tilde + C1s_*(G() - (2.0/3.0)*k_()*divU)
+                /epsilon_())/tau()
+                + Cp1*(G()/k_() - (2.0/3.0)*divU)
+                - pow3(ebf_())*Cp2*sqrt(2.0)*mag(S())
             )
           , phit_
         )
-        + alpha()*rho()*pow3(ebf_())*(2.0/3.0-C3_/2.0)/Cmu_/T_()*(mag(S())*T_()+pow3(ebf_()))/(max(mag(S())*T_(),1.87))
-        + alpha()*rho()*pow3(ebf_())/T_()/magSqr(S())*((2.0/Cmu_*(1.0-C4_)*(A()&S()) - 2.0/Cmu_*(1.0-C5_)*(A()&W()))&&S())
+        + alpha()*rho()*
+        (
+            pow3(ebf_())/tau()/(2*magSqr(S()))*((C4s*(A() & S()) 
+                - C5s*(A() & W())) && S())
+            + pow3(ebf_())*Cp3()/tau()
+        )
       + fvOptions(alpha, rho, phit_)
     );
 
@@ -673,6 +604,14 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     solve(phitEqn);
     fvOptions.correct(phit_);
     bound(phit_, phitMin_);
+
+    forAll(phit_, celli)
+    {
+        if(phit_[celli] > 1.0)
+        {
+            phit_[celli] = 1.0;
+        }
+    }
 
     correctNut();
 }
