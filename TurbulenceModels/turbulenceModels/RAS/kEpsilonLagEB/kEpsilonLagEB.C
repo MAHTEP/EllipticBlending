@@ -455,20 +455,80 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     (
         0.5*(tgradU() - tgradU().T())
     );
+    tgradU.clear();
+
+    // Definition of components of the mean strain rate
+    volScalarField Sxx_(S.component(tensor::XX));
+    volScalarField Sxy_(S.component(tensor::XY));
+    volScalarField Sxz_(S.component(tensor::XZ));
+    volScalarField Syx_(S.component(tensor::YX));
+    volScalarField Syy_(S.component(tensor::YY));
+    volScalarField Syz_(S.component(tensor::YZ));
+    volScalarField Szx_(S.component(tensor::ZX));
+    volScalarField Szy_(S.component(tensor::ZY));
+    volScalarField Szz_(S.component(tensor::ZZ));
+    
+    // Defition of S*DS/Dt
+    /*SDS
+    (
+        new volTensorField
+        (
+            IOobject
+            (
+				"SDS",
+				this->runTime.timeName(),
+				this->mesh_,
+				IOobject::NO_READ,
+				IOobject::AUTO_WRITE
+			),
+			this->mesh_,
+			dimensionedTensor("", dimless/dimTime, Zero)
+		)
+	);*/
+   volTensorField SDS(S);
+
+
+    SDS.component(tensor::XY) = (Sxx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
+                              + Sxy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
+                              + Sxz_*(fvc::ddt(Syz_)+fvc::div(this->phi(),Syz_)))/(2.0*magSqr(S));
+    SDS.component(tensor::XZ) = (Sxx_*(fvc::ddt(Szx_)+fvc::div(this->phi(),Szx_))
+                              + Sxy_*(fvc::ddt(Szy_)+fvc::div(this->phi(),Szy_))
+                              + Sxz_*(fvc::ddt(Szz_)+fvc::div(this->phi(),Szz_)))/(2.0*magSqr(S));                          
+    SDS.component(tensor::YX) = (Syx_*(fvc::ddt(Sxx_)+fvc::div(this->phi(),Sxx_))
+                              + Syy_*(fvc::ddt(Sxy_)+fvc::div(this->phi(),Sxy_))
+                              + Syz_*(fvc::ddt(Sxz_)+fvc::div(this->phi(),Sxz_)))/(2.0*magSqr(S));  
+    SDS.component(tensor::YZ) = (Syx_*(fvc::ddt(Szx_)+fvc::div(this->phi(),Szx_))
+                              + Syy_*(fvc::ddt(Szy_)+fvc::div(this->phi(),Szy_))
+                              + Syz_*(fvc::ddt(Szz_)+fvc::div(this->phi(),Szz_)))/(2.0*magSqr(S));  
+    SDS.component(tensor::ZX) = (Szx_*(fvc::ddt(Sxx_)+fvc::div(this->phi(),Sxx_))
+                              + Szy_*(fvc::ddt(Sxy_)+fvc::div(this->phi(),Sxy_))
+                              + Szz_*(fvc::ddt(Sxz_)+fvc::div(this->phi(),Sxz_)))/(2.0*magSqr(S));  
+    SDS.component(tensor::ZY) = (Szx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
+                              + Szy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
+                              + Szz_*(fvc::ddt(Syz_)+fvc::div(this->phi(),Syz_)))/(2.0*magSqr(S));
+    // Curvature correction
+    /*volScalarField S2 = 2.0*magSqr(S);
+    Info << "S2: " << S2.dimensions() << endl;
+    Info << "SDS: " << SDS.dimensions() << endl;
+    Info << "Sxx: " << Sxx_.dimensions() << endl;
+    */
+    volTensorField WTilde
+    (
+        W - 2.0*skew(SDS)
+    );
 
     // Anisotropy tensor (quadratic constitutive relation)
     volTensorField A
     (
-        -2*nut/k_*(S + 2.0*(2.0-2.0*C5_)/(C1_+C1s_+1.0)*((S&W)-(W&S))/(mag(S+W)))
+        -2*nut/k_*(S + 2.0*(2.0-2.0*C5_)/(C1_+C1s_+1.0)*((S&WTilde)-(WTilde&S))/(mag(S+WTilde)))
     );
-    tgradU.clear();
 
     // Time scale
     volScalarField tau
     (
         k_/epsilon_
     );
-    // Function for blending phit at wall
+    // Function for damping phit at wall
     volScalarField fmu
     (
         (sqrt(2.0)*mag(S)*tau + pow3(ebf_)) /
@@ -481,7 +541,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     (
          fmu/Cmu_*(2.0/3.0 - C3_/2.0)
     );
-
+    // Wall-normal vectors defined trhough the elliptic blending factor
     tmp<volVectorField> gradf(fvc::grad(ebf_));
     volVectorField n 
     (
@@ -490,6 +550,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
             )
     );
     gradf.clear();
+    // Additional production term in epsilon eq.
     volScalarField E
     (
         CK_*pow3(1-ebf_)*this->nu()*nut*sqr(fvc::div(mag(2*S&n)*n))
@@ -593,7 +654,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
         + alpha()*rho()*
         (
             pow3(ebf_())/tau()/(2*magSqr(S()))*((C4s*(A() & S()) 
-                - C5s*(A() & W())) && S())
+                - C5s*(A() & WTilde())) && S())
             + pow3(ebf_())*Cp3()/tau()
         )
       + fvOptions(alpha, rho, phit_)
