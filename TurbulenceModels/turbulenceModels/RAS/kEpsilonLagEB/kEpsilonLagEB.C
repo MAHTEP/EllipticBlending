@@ -38,6 +38,7 @@ namespace RASModels
 
 // * * * * * * * * * * * Protected Member Functions  * * * * * * * * * * * * //
 
+// Compute the turbulent viscosity (TLLP:Eq.10)
 template<class BasicTurbulenceModel>
 void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
 {   
@@ -63,7 +64,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
     BasicTurbulenceModel::correctNut();
 }
 
-
+// Compute the limit turbulent time scale (TLLP:Eq.14)
 template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ts() const
 {
@@ -75,7 +76,7 @@ tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ts() const
         );
 }
 
-
+// Compute the turbulent length scale (TLLP:Eq.12)
 template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ls() const
 {
@@ -118,16 +119,6 @@ kEpsilonLagEB<BasicTurbulenceModel>::kEpsilonLagEB
         phi,
         transport,
         propertiesName
-    ),
-
-    includeNu_
-    (
-        Switch::getOrAddToDict
-        (
-            "includeNu",
-            this->coeffDict_,
-            true
-        )
     ),
     Cmu_
     (
@@ -244,15 +235,6 @@ kEpsilonLagEB<BasicTurbulenceModel>::kEpsilonLagEB
             "Ceta",
             this->coeffDict_,
             75.0
-        )
-    ),
-    CT_
-    (
-        dimensionedScalar::getOrAddToDict
-        (
-            "CT",
-            this->coeffDict_,
-            1.0
         )
     ),
     sigmaK_
@@ -385,7 +367,6 @@ bool kEpsilonLagEB<BasicTurbulenceModel>::read()
 {
     if (eddyViscosity<RASModel<BasicTurbulenceModel>>::read())
     {
-        includeNu_.readIfPresent("includeNu", this->coeffDict());
         Cmu_.readIfPresent(this->coeffDict());
         C1_.readIfPresent(this->coeffDict());
         C3_.readIfPresent(this->coeffDict());
@@ -399,7 +380,6 @@ bool kEpsilonLagEB<BasicTurbulenceModel>::read()
         Ceps2_.readIfPresent(this->coeffDict());
         CL_.readIfPresent(this->coeffDict());
         Ceta_.readIfPresent(this->coeffDict());
-        CT_.readIfPresent(this->coeffDict());
         sigmaK_.readIfPresent(this->coeffDict());
         sigmaEps_.readIfPresent(this->coeffDict());
         sigmaPhit_.readIfPresent(this->coeffDict());
@@ -443,9 +423,9 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
 
     const volScalarField L2(type() + "L2", sqr(Ls()) + L2Min_);
  
-   // compute strain, vorticity and anisotropy tensors
+    // Compute strain, vorticity and anisotropy tensors
     tmp<volTensorField> tgradU = fvc::grad(U);
-    // Mean strain tensor
+    // Mean strain rate tensor
     volTensorField S
     (
         0.5*(tgradU() + tgradU().T())
@@ -469,24 +449,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     volScalarField Szz_(S.component(tensor::ZZ));
     
     // Defition of S*DS/Dt
-    /*SDS
-    (
-        new volTensorField
-        (
-            IOobject
-            (
-				"SDS",
-				this->runTime.timeName(),
-				this->mesh_,
-				IOobject::NO_READ,
-				IOobject::AUTO_WRITE
-			),
-			this->mesh_,
-			dimensionedTensor("", dimless/dimTime, Zero)
-		)
-	);*/
    volTensorField SDS(S);
-
 
     SDS.component(tensor::XY) = (Sxx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
                               + Sxy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
@@ -506,18 +469,14 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     SDS.component(tensor::ZY) = (Szx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
                               + Szy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
                               + Szz_*(fvc::ddt(Syz_)+fvc::div(this->phi(),Syz_)))/(2.0*magSqr(S));
-    // Curvature correction
-    /*volScalarField S2 = 2.0*magSqr(S);
-    Info << "S2: " << S2.dimensions() << endl;
-    Info << "SDS: " << SDS.dimensions() << endl;
-    Info << "Sxx: " << Sxx_.dimensions() << endl;
-    */
+    
+    // Spalart-Shur curvature correction for vorticity tensor (TLLP:Eq.20)
     volTensorField WTilde
     (
         W - 2.0*skew(SDS)
     );
 
-    // Anisotropy tensor (quadratic constitutive relation)
+    // Anisotropy tensor (TLLP:Eq.18)
     volTensorField A
     (
         -2*nut/k_*(S + 2.0*(2.0-2.0*C5_)/(C1_+C1s_+1.0)*((S&WTilde)-(WTilde&S))/(mag(S+WTilde)))
@@ -528,7 +487,8 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     (
         k_/epsilon_
     );
-    // Function for damping phit at wall
+
+    // Function for damping phit in region of low strain (TLLP:Eq.17)
     volScalarField fmu
     (
         (sqrt(2.0)*mag(S)*tau + pow3(ebf_)) /
@@ -536,12 +496,13 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
             sqrt(2.0)*mag(S)*tau,1.87
            )
     );
-    // Coefficient using fmu
+    // Coefficient using fmu (TLLP:Eq.15)
     volScalarField Cp3
     (
          fmu/Cmu_*(2.0/3.0 - C3_/2.0)
     );
-    // Wall-normal vectors defined trhough the elliptic blending factor
+
+    // Wall-normal vectors defined through the elliptic blending factor
     tmp<volVectorField> gradf(fvc::grad(ebf_));
     volVectorField n 
     (
@@ -550,7 +511,8 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
             )
     );
     gradf.clear();
-    // Additional production term in epsilon eq.
+
+    // Additional production term in epsilon eq. (TLLP:Eq.7)
     volScalarField E
     (
         CK_*pow3(1-ebf_)*this->nu()*nut*sqr(fvc::div(mag(2*S&n)*n))
@@ -559,7 +521,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     // Update epsilon and G at the wall
     epsilon_.boundaryFieldRef().updateCoeffs();
 
-    // Turbulent kinetic energy dissipation rate equation 
+    // Turbulent kinetic energy dissipation rate equation  (TLLP:Eq.6)
     // k/T ~ epsilon
     tmp<fvScalarMatrix> epsEqn
     (
@@ -589,7 +551,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     bound(epsilon_, this->epsilonMin_);
 
 
-    // Turbulent kinetic energy equation 
+    // Turbulent kinetic energy equation (TLLP:Eq.5)
     // epsilon/k ~ 1/Ts
     tmp<fvScalarMatrix> kEqn
     (
@@ -610,7 +572,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     bound(k_, this->kMin_);
 
 
-// Elliptic blending function equation
+// Elliptic blending function equation (TLLP:Eq.11)
     tmp<fvScalarMatrix> ebfEqn
    (
     -fvm::laplacian(ebf_)
@@ -632,7 +594,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     const dimensionedScalar C4s = 2.0/Cmu_*(1.0 - C4_);
     const dimensionedScalar C5s = 2.0/Cmu_*(1.0 - C5_);
 
-// Reduced stress function
+// Stress-strain lag equation (TLLP:Eq.9)
     tmp<fvScalarMatrix> phitEqn
     (
         fvm::ddt(alpha, rho, phit_)
@@ -665,7 +627,9 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     solve(phitEqn);
     fvOptions.correct(phit_);
     bound(phit_, phitMin_);
-
+    
+    // Bounding phit
+    
     forAll(phit_, celli)
     {
         if(phit_[celli] > 1.0)

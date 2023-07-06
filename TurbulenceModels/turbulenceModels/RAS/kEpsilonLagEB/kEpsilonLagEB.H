@@ -30,47 +30,55 @@ Group
     grpRASTurbulence
 
 Description
-    The k-epsilon-phit-f turbulence closure model for incompressible and
+    The k-epsilon Lag Elliptic-Blending turbulence closure model for incompressible and
     compressible flows.
 
     The model is a three-transport-equation linear-eddy-viscosity turbulence
-    closure model alongside an elliptic relaxation equation.
+    closure model alongside an elliptic blending equation.
 
     \heading Input fields
     \plaintable
         k         | Turbulent kinetic energy [m2/s2]
         epsilon   | Turbulent kinetic energy dissipation rate [m2/s3]
-        phit      | Normalised wall-normal fluctuating velocity scale [-]
-        f         | Elliptic relaxation factor [1/s]
+        phit      | Lag between stress-strain [-]
+        f         | Elliptic blending factor [-]
     \endplaintable
 
     Reference:
     \verbatim
-        Standard model (Tag:LUU):
-            Laurence, D. R., Uribe, J. C., & Utyuzhnikov, S. V. (2005).
-            A robust formulation of the v2-f model.
-            Flow, Turbulence and Combustion, 73(3-4), 169–185.
-            DOI:10.1007/s10494-005-1974-8
+        Standard model (Tag:TLLP):
+            Laurence
+            Tunstall, R., Lardeau, S., Laurence, D., Prosser, R. (2016).
+            An Elliptic Blending Lag Model for Flows in Thermal-Hydraulics Systems
+            ETMM11 Conference
+            https://www.researchgate.net/publication/308413285_AN_ELLIPTIC_BLENDING_LAG_MODEL_FOR_FLOWS_IN_THERMAL-HYDRAULICS_SYSTEMS
     \endverbatim
 
-    The default model coefficients are (LUU:Eqs. 19-20):
+    The default model coefficients are:
     \verbatim
         kEpsilonLagEBCoeffs
         {
-            includeNu   true;    // include nu in (LUU: Eq. 17), see Notes
-            Cmu         0.22;    // Turbulent viscosity constant
-            Ceps2       1.9;     // Model constant for epsilon
-            CL          0.25;    // Model constant for L
-            Ceta        110.0;   // Model constant for L
-            CT          6.0;     // Model constant for T
-            sigmaK      1.0;     // Turbulent Prandtl number for k
-            sigmaEps    1.3;     // Turbulent Prandtl number for epsilon
-            sigmaPhit   1.0;     // Turbulent Prandtl number for phit = sigmaK
+            Cmu         0.22;       // Turbulent viscosity constant
+            C1          1.7;
+            C3          0.8;
+            C4          0.625;
+            C5          0.2;
+            C1s         0.9;
+            C2s         0.65;       
+            CK          2.3;        // Model constant for E
+            Ct          4.0;        // Model constant for T
+            Ceps1       1.44;       // Model constant for epsilon
+            Ceps2       1.9;        // Model constant for epsilon
+            CL          0.164;      // Model constant for L
+            Ceta        75.0;       // Model constant for L
+            sigmaK      1.0;        // Turbulent Prandtl number for k
+            sigmaEps    1.2;        // Turbulent Prandtl number for epsilon
+            sigmaPhit   1.0;        // Turbulent Prandtl number for phit
         }
     \endverbatim
 
 Note
-    The name of the original variable replacing 'v2' is 'phi'
+    The name of the variable representing the lag between stress and strain is 'phi'.
     However, the name 'phi' preexisted in OpenFOAM; therefore, this name was
     replaced by 'phit' herein.
 
@@ -116,9 +124,6 @@ class kEpsilonLagEB
 protected:
 
     // Protected Data
-
-            Switch includeNu_;
-
         // Model coefficients
 
             dimensionedScalar Cmu_;
@@ -134,7 +139,6 @@ protected:
             dimensionedScalar Ceps2_;
             dimensionedScalar CL_;
             dimensionedScalar Ceta_;
-            dimensionedScalar CT_;
             dimensionedScalar sigmaK_;
             dimensionedScalar sigmaEps_;
             dimensionedScalar sigmaPhit_;
@@ -148,10 +152,10 @@ protected:
             //- Turbulent kinetic energy dissipation rate [m2/s3]
             volScalarField epsilon_;
 
-            //- Normalised wall-normal fluctuating velocity scale [-]
+            //- Lag between stress-strain [-]
             volScalarField phit_;
 
-            //- Elliptic relaxation factor [1/s]
+            //- Elliptic blending factor [-]
             volScalarField ebf_;
 
             //- Turbulent time scale [s]
@@ -213,7 +217,7 @@ public:
         //- Re-read model coefficients if they have changed
         virtual bool read();
 
-        //- Return the effective diffusivity for k (LUU:Eq. 3)
+        //- Return the effective diffusivity for k (TLLP:Eq.5)
         tmp<volScalarField> DkEff() const
         {
             return tmp<volScalarField>
@@ -226,7 +230,7 @@ public:
             );
         }
 
-        //- Return the effective diffusivity for epsilon (LUU:Eq. 4)
+        //- Return the effective diffusivity for epsilon (TLLP:Eq.6)
         tmp<volScalarField> DepsilonEff() const
         {
             return tmp<volScalarField>
@@ -239,7 +243,7 @@ public:
             );
         }
 
-        //- Return the effective diffusivity for phit (LUU:Eq. 17)
+        //- Return the effective diffusivity for phit (TLLP:Eq.7)
         tmp<volScalarField> DphitEff() const
         {
             return tmp<volScalarField>
