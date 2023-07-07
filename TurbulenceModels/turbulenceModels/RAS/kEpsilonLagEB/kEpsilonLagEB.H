@@ -41,7 +41,7 @@ Description
         k         | Turbulent kinetic energy [m2/s2]
         epsilon   | Turbulent kinetic energy dissipation rate [m2/s3]
         phit      | Lag between stress-strain [-]
-        f         | Elliptic blending factor [-]
+        ebf         | Elliptic blending factor [-]
     \endplaintable
 
     Reference:
@@ -81,6 +81,8 @@ Note
     The name of the variable representing the lag between stress and strain is 'phi'.
     However, the name 'phi' preexisted in OpenFOAM; therefore, this name was
     replaced by 'phit' herein.
+    The same applies for the elliptic blending factor (called 'alpha'). 
+    Therefore, it has been replaced by 'ebf' herein.
 
 SourceFiles
     kEpsilonLagEB.C
