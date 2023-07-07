@@ -1,0 +1,77 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2212                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvSchemes;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+ddtSchemes
+{
+    default         steadyState;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+}
+
+divSchemes
+{
+    default none;
+
+    velocityScheme      bounded Gauss linearUpwind grad(U);
+    div(phi,U)      bounded Gauss linearUpwind grad(U);
+    turbulence        bounded Gauss limitedLinear 1;
+
+    div(phi,k)          $turbulence;
+    div(phi,epsilon)    $turbulence;
+    div(phi,omega)      $turbulence;
+    div(phi,phit)       $turbulence;
+    
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(0)) $velocityScheme;
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(8)) $velocityScheme;
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(7)) $velocityScheme;
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(6)) $velocityScheme;
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(5)) $velocityScheme;
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(4)) $velocityScheme;
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(3)) $velocityScheme;
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(2)) $velocityScheme;
+    div(phi,(0.5*(grad(U)+grad(U).T())).component(1)) $velocityScheme;
+
+    div((mag(((2*(0.5*(grad(U)+grad(U).T())))&(grad(ebf)|max(mag(grad(ebf)),1e-15))))*(grad(ebf)|max(mag(grad(ebf)),1e-15)))) Gauss linear;
+    
+    div(nonlinearStress) Gauss linear;
+    div((nuEff*dev2(T(grad(U))))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+wallDist
+{
+    method          meshWave;
+}
+
+
+// ************************************************************************* //
