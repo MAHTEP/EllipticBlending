@@ -1,1 +1,3 @@
-#TurbulenceModels/incompressible/**/
+incompressible/
+lnInclude/
+
