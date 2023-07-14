@@ -16,4 +16,5 @@ In the folder TurbulenceModels/turbulenceModels/RAS/kEpsilonLagEB you can find t
 
 In the folder pitzDailyLagEB you can find the pitzDaily case adapted for the lagEB model. You just need to run the Allrun script.
 
+The model has been developed and tested in OpenFOAM v2212
     
