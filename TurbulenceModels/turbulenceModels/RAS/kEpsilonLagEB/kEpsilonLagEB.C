@@ -503,14 +503,12 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     );
 
     // Wall-normal vectors defined through the elliptic blending factor
-    tmp<volVectorField> gradf(fvc::grad(ebf_));
     volVectorField n 
     (
         fvc::grad(ebf_)/max(
             mag(fvc::grad(ebf_)), dimensionedScalar(dimless/dimLength, SMALL)
             )
     );
-    gradf.clear();
 
     // Additional production term in epsilon eq. (TLLP:Eq.7)
     volScalarField E

@@ -57,8 +57,8 @@ makeBaseTurbulenceModel
 // RAS models
 // -------------------------------------------------------------------------- //
 
-#include "kEpsilonEB.H"
-makeRASModel(kEpsilonEB);
+//#include "kEpsilonEB.H"
+//makeRASModel(kEpsilonEB);
 
 #include "kEpsilonLagEB.H"
 makeRASModel(kEpsilonLagEB);

@@ -835,17 +835,15 @@ $(WM_PROJECT_DIR)/src/TurbulenceModels/turbulenceModels/lnInclude/RASModel.C \
 $(WM_PROJECT_DIR)/src/TurbulenceModels/turbulenceModels/lnInclude/LESModel.H \
 $(WM_PROJECT_DIR)/src/TurbulenceModels/turbulenceModels/lnInclude/LESdelta.H \
 $(WM_PROJECT_DIR)/src/TurbulenceModels/turbulenceModels/lnInclude/LESModel.C \
-../turbulenceModels/lnInclude/kEpsilonEB.H \
+../turbulenceModels/lnInclude/kEpsilonLagEB.H \
 $(WM_PROJECT_DIR)/src/TurbulenceModels/turbulenceModels/lnInclude/eddyViscosity.H \
 $(WM_PROJECT_DIR)/src/TurbulenceModels/turbulenceModels/lnInclude/eddyViscosity.C \
-../turbulenceModels/lnInclude/kEpsilonEB.C \
+../turbulenceModels/lnInclude/kEpsilonLagEB.C \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/fvOptions.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/fvOptionList.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/fvOption.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/fvOptionI.H \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/fvOptionListTemplates.C \
 $(WM_PROJECT_DIR)/src/finiteVolume/lnInclude/bound.H \
-../turbulenceModels/lnInclude/kEpsilonLagEB.H \
-../turbulenceModels/lnInclude/kEpsilonLagEB.C \
 
 #END
