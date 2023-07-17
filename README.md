@@ -1,6 +1,8 @@
 # EllipticBlending
 This project aims at implementing the k-epsilon Lag Elliptic Blending turbulent model for OpenFOAM. 
+
 The model was developed in:
+
 [1] Development of an elliptic-blending lag model for industrial applications, S. Lardeau, F. Billard, 
       54th AIAA Aerospace Sciences Meeting (2016), DOI: 10.2514/6.2016-1600
       https://www.researchgate.net/publication/314229391_development_of_an_elliptic-blending_lag_model_for_industrial_applications
@@ -14,4 +16,5 @@ In the folder TurbulenceModels/turbulenceModels/RAS/kEpsilonLagEB you can find t
 
 In the folder pitzDailyLagEB you can find the pitzDaily case adapted for the lagEB model. You just need to run the Allrun script.
 
+The model has been developed and tested in OpenFOAM v2212
     
