@@ -1,3 +1,7 @@
+TurbulenceModels/*
 incompressible/
 lnInclude/
-
+pitzDailyLagEB/
+pitzDailyKome/
+pitzDailyKeps/
+*.json
