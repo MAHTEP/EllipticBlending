@@ -425,13 +425,15 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
  
     // Compute strain, vorticity and anisotropy tensors
     tmp<volTensorField> tgradU = fvc::grad(U);
+    
     // Mean strain rate tensor
-    volTensorField S
+    const volTensorField S
     (
         0.5*(tgradU() + tgradU().T())
     );
+
     // Mean vorticity tensor
-    volTensorField W
+    const volTensorField W
     (
         0.5*(tgradU() - tgradU().T())
     );
@@ -449,7 +451,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     volScalarField Szz_(S.component(tensor::ZZ));
     
     // Defition of S*DS/Dt
-   volTensorField SDS(S);
+   const volTensorField SDS(S);
 
     SDS.component(tensor::XY) = (Sxx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
                               + Sxy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
@@ -470,40 +472,43 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
                               + Szy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
                               + Szz_*(fvc::ddt(Syz_)+fvc::div(this->phi(),Syz_)))/(2.0*magSqr(S));
     
+    
     // Spalart-Shur curvature correction for vorticity tensor (TLLP:Eq.20)
-    volTensorField WTilde
+    const volTensorField WTilde
     (
         W - 2.0*skew(SDS)
     );
 
     // Anisotropy tensor (TLLP:Eq.18)
+    const dimensionedScalar beta2_ = 2.0*(1.0 - C5_)/(C1_ + C1s_ + 1.0);
     volTensorField A
     (
-        -2*nut/k_*(S + 2.0*(2.0-2.0*C5_)/(C1_+C1s_+1.0)*((S&WTilde)-(WTilde&S))/(mag(S+WTilde)))
+        -2*nut/k_*(S + 2.0*beta2_*((S&WTilde) - (WTilde&S))/(mag(S + WTilde)))
     );
 
     // Time scale
-    volScalarField tau
+    const volScalarField tau
     (
         k_/epsilon_
     );
 
     // Function for damping phit in region of low strain (TLLP:Eq.17)
-    volScalarField fmu
+    const volScalarField fmu
     (
         (sqrt(2.0)*mag(S)*tau + pow3(ebf_)) /
         max(
             sqrt(2.0)*mag(S)*tau,1.87
            )
     );
+
     // Coefficient using fmu (TLLP:Eq.15)
-    volScalarField Cp3
+    const volScalarField Cp3
     (
          fmu/Cmu_*(2.0/3.0 - C3_/2.0)
     );
 
     // Wall-normal vectors defined through the elliptic blending factor
-    volVectorField n 
+    const volVectorField n 
     (
         fvc::grad(ebf_)/max(
             mag(fvc::grad(ebf_)), dimensionedScalar(dimless/dimLength, SMALL)
@@ -511,9 +516,9 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     );
 
     // Additional production term in epsilon eq. (TLLP:Eq.7)
-    volScalarField E
+    const volScalarField E
     (
-        CK_*pow3(1-ebf_)*this->nu()*nut*sqr(fvc::div(mag(2*S&n)*n))
+        CK_*pow3(1.0 - ebf_)*this->nu()*nut*sqr(fvc::div(mag(2.0*S & n)*n))
     );
     
     // Update epsilon and G at the wall
