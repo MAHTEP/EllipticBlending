@@ -22,7 +22,7 @@ startTime       0;
 
 stopAt          endTime;
 
-endTime         4000;
+endTime         1000;
 
 deltaT          1;
 
@@ -30,7 +30,7 @@ writeControl    timeStep;
 
 writeInterval   200;
 
-purgeWrite      10;
+purgeWrite      1;
 
 writeFormat     ascii;
 

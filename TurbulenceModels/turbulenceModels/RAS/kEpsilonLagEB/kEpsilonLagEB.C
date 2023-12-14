@@ -635,9 +635,9 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     
     forAll(phit_, celli)
     {
-        if(phit_[celli] > 0.667)
+        if(phit_[celli] > 2.0)
         {
-            phit_[celli] = 0.667;
+            phit_[celli] = 2.0;
         }
     }
 
