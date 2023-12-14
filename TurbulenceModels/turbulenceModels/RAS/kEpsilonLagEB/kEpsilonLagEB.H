@@ -51,7 +51,6 @@ Description
             Tunstall, R., Lardeau, S., Laurence, D., Prosser, R. (2016).
             An Elliptic Blending Lag Model for Flows in Thermal-Hydraulics Systems
             ETMM11 Conference
-            https://www.researchgate.net/publication/308413285_AN_ELLIPTIC_BLENDING_LAG_MODEL_FOR_FLOWS_IN_THERMAL-HYDRAULICS_SYSTEMS
     \endverbatim
 
     The default model coefficients are:
