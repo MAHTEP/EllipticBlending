@@ -53,7 +53,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
             /
             max
             (
-                dimensionedScalar(pow(dimTime,-1),1.0e-10),
+                dimensionedScalar(pow(dimTime,-1),VSMALL),
                 Cmu_.value()*sqrt(3.0)*phit_*magS
                     
             )
