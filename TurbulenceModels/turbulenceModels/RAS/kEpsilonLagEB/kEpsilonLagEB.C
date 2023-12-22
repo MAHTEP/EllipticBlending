@@ -450,8 +450,8 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     volScalarField Szy_(S.component(tensor::ZY));
     volScalarField Szz_(S.component(tensor::ZZ));
     
-    // Defition of S*DS/Dt
-   const volTensorField SDS(S);
+    // Defition of 1/S^2*(S*DS/Dt)
+   volTensorField SDS(S);
 
     SDS.component(tensor::XY) = (Sxx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
                               + Sxy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
