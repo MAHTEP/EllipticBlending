@@ -53,7 +53,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
             /
             max
             (
-                dimensionedScalar(pow(dimTime,-1),1.0e-10),
+                dimensionedScalar(pow(dimTime,-1),VSMALL),
                 Cmu_.value()*sqrt(3.0)*phit_*magS
                     
             )
@@ -450,8 +450,8 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     volScalarField Szy_(S.component(tensor::ZY));
     volScalarField Szz_(S.component(tensor::ZZ));
     
-    // Defition of S*DS/Dt
-   const volTensorField SDS(S);
+    // Defition of 1/S^2*(S*DS/Dt)
+   volTensorField SDS(S);
 
     SDS.component(tensor::XY) = (Sxx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
                               + Sxy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
@@ -656,7 +656,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
         )
         + alpha()*rho()*
         (
-            pow3(ebf_())/tau()/(2*magSqr(S()))*((C4s*(A() & S()) 
+            pow3(ebf_())/tau()/(2.0*magSqr(S()))*((C4s*(A() & S()) 
                 - C5s*(A() & WTilde())) && S())
             + pow3(ebf_())*Cp3()/tau()
         )
