@@ -618,7 +618,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
         )
         + alpha()*rho()*
         (
-            pow3(ebf_())/tau()/(2*magSqr(S()))*((C4s*(A() & S()) 
+            pow3(ebf_())/tau()/(2.0*magSqr(S()))*((C4s*(A() & S()) 
                 - C5s*(A() & WTilde())) && S())
             + pow3(ebf_())*Cp3()/tau()
         )
