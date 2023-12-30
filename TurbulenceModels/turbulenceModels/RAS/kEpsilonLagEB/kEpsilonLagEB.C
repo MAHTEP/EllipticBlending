@@ -453,25 +453,63 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     // Defition of 1/S^2*(S*DS/Dt)
    volTensorField SDS(S);
 
-    SDS.component(tensor::XY) = (Sxx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
-                              + Sxy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
-                              + Sxz_*(fvc::ddt(Syz_)+fvc::div(this->phi(),Syz_)))/(2.0*magSqr(S));
-    SDS.component(tensor::XZ) = (Sxx_*(fvc::ddt(Szx_)+fvc::div(this->phi(),Szx_))
-                              + Sxy_*(fvc::ddt(Szy_)+fvc::div(this->phi(),Szy_))
-                              + Sxz_*(fvc::ddt(Szz_)+fvc::div(this->phi(),Szz_)))/(2.0*magSqr(S));                          
-    SDS.component(tensor::YX) = (Syx_*(fvc::ddt(Sxx_)+fvc::div(this->phi(),Sxx_))
-                              + Syy_*(fvc::ddt(Sxy_)+fvc::div(this->phi(),Sxy_))
-                              + Syz_*(fvc::ddt(Sxz_)+fvc::div(this->phi(),Sxz_)))/(2.0*magSqr(S));  
-    SDS.component(tensor::YZ) = (Syx_*(fvc::ddt(Szx_)+fvc::div(this->phi(),Szx_))
-                              + Syy_*(fvc::ddt(Szy_)+fvc::div(this->phi(),Szy_))
-                              + Syz_*(fvc::ddt(Szz_)+fvc::div(this->phi(),Szz_)))/(2.0*magSqr(S));  
-    SDS.component(tensor::ZX) = (Szx_*(fvc::ddt(Sxx_)+fvc::div(this->phi(),Sxx_))
-                              + Szy_*(fvc::ddt(Sxy_)+fvc::div(this->phi(),Sxy_))
-                              + Szz_*(fvc::ddt(Sxz_)+fvc::div(this->phi(),Sxz_)))/(2.0*magSqr(S));  
-    SDS.component(tensor::ZY) = (Szx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
-                              + Szy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
-                              + Szz_*(fvc::ddt(Syz_)+fvc::div(this->phi(),Syz_)))/(2.0*magSqr(S));
+    // SDS.component(tensor::XY) = (Sxx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
+    //                           + Sxy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
+    //                           + Sxz_*(fvc::ddt(Syz_)+fvc::div(this->phi(),Syz_)))/(2.0*magSqr(S));
+    // SDS.component(tensor::XZ) = (Sxx_*(fvc::ddt(Szx_)+fvc::div(this->phi(),Szx_))
+    //                           + Sxy_*(fvc::ddt(Szy_)+fvc::div(this->phi(),Szy_))
+    //                           + Sxz_*(fvc::ddt(Szz_)+fvc::div(this->phi(),Szz_)))/(2.0*magSqr(S));                          
+    // SDS.component(tensor::YX) = (Syx_*(fvc::ddt(Sxx_)+fvc::div(this->phi(),Sxx_))
+    //                           + Syy_*(fvc::ddt(Sxy_)+fvc::div(this->phi(),Sxy_))
+    //                           + Syz_*(fvc::ddt(Sxz_)+fvc::div(this->phi(),Sxz_)))/(2.0*magSqr(S));  
+    // SDS.component(tensor::YZ) = (Syx_*(fvc::ddt(Szx_)+fvc::div(this->phi(),Szx_))
+    //                           + Syy_*(fvc::ddt(Szy_)+fvc::div(this->phi(),Szy_))
+    //                           + Syz_*(fvc::ddt(Szz_)+fvc::div(this->phi(),Szz_)))/(2.0*magSqr(S));  
+    // SDS.component(tensor::ZX) = (Szx_*(fvc::ddt(Sxx_)+fvc::div(this->phi(),Sxx_))
+    //                           + Szy_*(fvc::ddt(Sxy_)+fvc::div(this->phi(),Sxy_))
+    //                           + Szz_*(fvc::ddt(Sxz_)+fvc::div(this->phi(),Sxz_)))/(2.0*magSqr(S));  
+    // SDS.component(tensor::ZY) = (Szx_*(fvc::ddt(Syx_)+fvc::div(this->phi(),Syx_))
+    //                           + Szy_*(fvc::ddt(Syy_)+fvc::div(this->phi(),Syy_))
+    //                           + Szz_*(fvc::ddt(Syz_)+fvc::div(this->phi(),Syz_)))/(2.0*magSqr(S));
     
+    
+    // Spalart-Shur curvature correction for vorticity tensor (TLLP:Eq.20)
+    // const volTensorField WTilde
+    // (
+    //     W - 2.0*skew(SDS)
+    // );
+
+    // da testare
+    SDS.component(tensor::XY) = (
+                                Sxx_*(fvc::ddt(Syx_) + (U & fvc::grad(Syx_)))
+                              + Sxy_*(fvc::ddt(Syy_) + (U & fvc::grad(Syy_)))
+                              + Sxz_*(fvc::ddt(Syz_) + (U & fvc::grad(Syz_)))
+                                )/(2.0*magSqr(S));
+    SDS.component(tensor::XZ) = (
+                                Sxx_*(fvc::ddt(Szx_) + (U & fvc::grad(Szx_)))
+                              + Sxy_*(fvc::ddt(Szy_) + (U & fvc::grad(Szy_)))
+                              + Sxz_*(fvc::ddt(Szz_) + (U & fvc::grad(Szz_)))
+                                )/(2.0*magSqr(S));                          
+    SDS.component(tensor::YX) = (
+                                Syx_*(fvc::ddt(Sxx_) + (U & fvc::grad(Sxx_)))
+                              + Syy_*(fvc::ddt(Sxy_) + (U & fvc::grad(Sxy_)))
+                              + Syz_*(fvc::ddt(Sxz_) + (U & fvc::grad(Sxz_)))
+                                )/(2.0*magSqr(S));  
+    SDS.component(tensor::YZ) = (
+                                Syx_*(fvc::ddt(Szx_) + (U & fvc::grad(Szx_)))
+                              + Syy_*(fvc::ddt(Szy_) + (U & fvc::grad(Szy_)))
+                              + Syz_*(fvc::ddt(Szz_) + (U & fvc::grad(Szz_)))
+                                )/(2.0*magSqr(S));  
+    SDS.component(tensor::ZX) = (
+                                Szx_*(fvc::ddt(Sxx_) + (U & fvc::grad(Sxx_)))
+                              + Szy_*(fvc::ddt(Sxy_) + (U & fvc::grad(Sxy_)))
+                              + Szz_*(fvc::ddt(Sxz_) + (U & fvc::grad(Sxz_)))
+                                )/(2.0*magSqr(S));  
+    SDS.component(tensor::ZY) = (
+                                Szx_*(fvc::ddt(Syx_) + (U & fvc::grad(Syx_)))
+                              + Szy_*(fvc::ddt(Syy_) + (U & fvc::grad(Syy_)))
+                              + Szz_*(fvc::ddt(Syz_) + (U & fvc::grad(Syz_)))
+                                )/(2.0*magSqr(S));
     
     // Spalart-Shur curvature correction for vorticity tensor (TLLP:Eq.20)
     const volTensorField WTilde
@@ -483,7 +521,8 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     const dimensionedScalar beta2_ = 2.0*(1.0 - C5_)/(C1_ + C1s_ + 1.0);
     volTensorField A
     (
-        -2*nut/k_*(S + 2.0*beta2_*((S&WTilde) - (WTilde&S))/(mag(S + WTilde)))
+        -2*nut/k_*(S + 2.0*beta2_*((S & WTilde) - (WTilde & S))/
+        (mag(S + WTilde)))
     );
 
     // Time scale
