@@ -37,7 +37,7 @@ divSchemes
     div(phi,omega)      $turbulence;
     div(phi,phit)       $turbulence;
     
-    div((mag(((2*(0.5*(grad(U)+grad(U).T())))&(grad(ebf)|max(mag(grad(ebf)),1e-15))))*(grad(ebf)|max(mag(grad(ebf)),1e-15)))) Gauss linear;
+    div(magTermE) Gauss linear;
    
     div((nuEff*dev2(T(grad(U))))) Gauss linear;
 }
