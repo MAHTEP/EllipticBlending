@@ -1,0 +1,15 @@
+#!/bin/sh
+cd "${0%/*}" || exit                                # Run from this directory
+. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
+#------------------------------------------------------------------------------
+
+./Allclean
+restore0Dir
+
+touch BFS.foam
+
+runApplication blockMesh
+
+runApplication simpleFoam
+
+#------------------------------------------------------------------------------
