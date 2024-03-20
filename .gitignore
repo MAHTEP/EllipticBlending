@@ -5,4 +5,4 @@ pitzDailyKome/
 pitzDailyKeps/
 pitzDailyLagEB/
 *.json
-functionObjects/*
+functionObjects/
