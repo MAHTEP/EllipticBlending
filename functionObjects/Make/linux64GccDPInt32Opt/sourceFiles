@@ -1,4 +1,0 @@
-SOURCE = \
-myFunctionObject/myWallShearStress.C \
-
-# sources
