@@ -1,0 +1,3 @@
+myFunctionObject/myWallShearStress.C
+
+LIB = $(FOAM_USER_LIBBIN)/libmyFunctionObject
