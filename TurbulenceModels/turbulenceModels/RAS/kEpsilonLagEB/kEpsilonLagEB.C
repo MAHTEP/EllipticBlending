@@ -499,7 +499,8 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     //                           + Syz_*(fvc::ddt(Syy_) + (U & fvc::grad(Syy_)))
     //                           + Szz_*(fvc::ddt(Syz_) + (U & fvc::grad(Syz_)))
     //                             )/(2.0*magSqr(S));
-    volSymmTensorField DS(S);
+    volSymmTensorField DS(fvc::ddt(S));
+    
     DS.component(tensor::XX) = fvc::ddt(Sxx_) + (U & fvc::grad(Sxx_));
 
     DS.component(tensor::YY) = fvc::ddt(Syy_) + (U & fvc::grad(Syy_));
@@ -549,7 +550,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     //                           + Szz_*(fvc::ddt(Syz_) + fvc::div(this->phi(), Syz_))
     //                             )/(2.0*magSqr(S));
 
-    
+    // Info << SDS.dimensions() << endl;
     // // Spalart-Shur curvature correction for vorticity tensor (TLLP:Eq.20)
     const volTensorField WTilde
     (
