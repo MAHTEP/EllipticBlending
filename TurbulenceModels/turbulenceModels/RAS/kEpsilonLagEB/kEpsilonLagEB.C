@@ -427,10 +427,6 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     tmp<volTensorField> tgradU = fvc::grad(U);
     
     // Mean strain rate tensor
-    // const volTensorField S
-    // (
-    //     0.5*(tgradU() + tgradU().T())
-    // );
     const volSymmTensorField S
     (
         symm(tgradU())
@@ -443,114 +439,26 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     );
     tgradU.clear();
 
-    // solo con tensori: non esiste il gradiente del tensore in OF
-    // const volTensorField DSDt 
-    // (
-    //     fvc::ddt(S) + U & fvc::grad(S)
-    // );
-    // const volTensorField SDS 
-    // (
-    //     (S & DSDt.T())/(2.0*magSqr(S))
-    // );
-    
-    // Modo alternativo per SDS, con calcolo tensoriale e metodo conservativo 
-    // const volTensorField DSDt (Foam::fvc::ddt(S) + Foam::fvc::div(this->phi(),S));
-    // const volTensorField SDS
-    // (
-    //     (S & DSDt)/(2.0*magSqr(S))
-    // );
-
-    // Definition of components of the mean strain rate
-    volScalarField Sxx_(S.component(tensor::XX));
-    volScalarField Sxy_(S.component(tensor::XY));
-    volScalarField Sxz_(S.component(tensor::XZ));
-    volScalarField Syy_(S.component(tensor::YY));
-    volScalarField Syz_(S.component(tensor::YZ));
-    volScalarField Szz_(S.component(tensor::ZZ));
-    
-    // Defition of 1/S^2*(S*DS/Dt)
-    // SDS.component(tensor::XY) = (
-    //                             Sxx_*(fvc::ddt(Sxy_) + (U & fvc::grad(Sxy_)))
-    //                           + Sxy_*(fvc::ddt(Syy_) + (U & fvc::grad(Syy_)))
-    //                           + Sxz_*(fvc::ddt(Syz_) + (U & fvc::grad(Syz_)))
-    //                             )/(2.0*magSqr(S));
-    // SDS.component(tensor::XZ) = (
-    //                             Sxx_*(fvc::ddt(Sxz_) + (U & fvc::grad(Sxz_)))
-    //                           + Sxy_*(fvc::ddt(Syz_) + (U & fvc::grad(Syz_)))
-    //                           + Sxz_*(fvc::ddt(Szz_) + (U & fvc::grad(Szz_)))
-    //                             )/(2.0*magSqr(S));                          
-    // SDS.component(tensor::YX) = (
-    //                             Sxy_*(fvc::ddt(Sxx_) + (U & fvc::grad(Sxx_)))
-    //                           + Syy_*(fvc::ddt(Sxy_) + (U & fvc::grad(Sxy_)))
-    //                           + Syz_*(fvc::ddt(Sxz_) + (U & fvc::grad(Sxz_)))
-    //                             )/(2.0*magSqr(S));  
-    // SDS.component(tensor::YZ) = (
-    //                             Sxy_*(fvc::ddt(Sxz_) + (U & fvc::grad(Sxz_)))
-    //                           + Syy_*(fvc::ddt(Syz_) + (U & fvc::grad(Syz_)))
-    //                           + Syz_*(fvc::ddt(Szz_) + (U & fvc::grad(Szz_)))
-    //                             )/(2.0*magSqr(S));  
-    // SDS.component(tensor::ZX) = (
-    //                             Sxz_*(fvc::ddt(Sxx_) + (U & fvc::grad(Sxx_)))
-    //                           + Syz_*(fvc::ddt(Sxy_) + (U & fvc::grad(Sxy_)))
-    //                           + Szz_*(fvc::ddt(Sxz_) + (U & fvc::grad(Sxz_)))
-    //                             )/(2.0*magSqr(S));  
-    // SDS.component(tensor::ZY) = (
-    //                             Sxz_*(fvc::ddt(Sxy_) + (U & fvc::grad(Sxy_)))
-    //                           + Syz_*(fvc::ddt(Syy_) + (U & fvc::grad(Syy_)))
-    //                           + Szz_*(fvc::ddt(Syz_) + (U & fvc::grad(Syz_)))
-    //                             )/(2.0*magSqr(S));
     volSymmTensorField DS(fvc::ddt(S));
     
-    DS.component(tensor::XX) = fvc::ddt(Sxx_) + (U & fvc::grad(Sxx_));
-
-    DS.component(tensor::YY) = fvc::ddt(Syy_) + (U & fvc::grad(Syy_));
-
-    DS.component(tensor::ZZ) = fvc::ddt(Szz_) + (U & fvc::grad(Szz_));
+    DS.component(tensor::XX) = DS.component(tensor::XX) +
+                               (U & fvc::grad(S.component(tensor::XX)));
+    DS.component(tensor::XY) = DS.component(tensor::XY) + 
+                               (U & fvc::grad(S.component(tensor::XY)));
+    DS.component(tensor::XZ) = DS.component(tensor::XZ) + 
+                               (U & fvc::grad(S.component(tensor::XZ)));
+    DS.component(tensor::YY) = DS.component(tensor::YY) + 
+                               (U & fvc::grad(S.component(tensor::YY)));
+    DS.component(tensor::YZ) = DS.component(tensor::YZ) + 
+                               (U & fvc::grad(S.component(tensor::YZ)));  
+    DS.component(tensor::ZZ) = DS.component(tensor::XZ) + 
+                               (U & fvc::grad(S.component(tensor::ZZ)));
                                 
-    DS.component(tensor::XY) = fvc::ddt(Sxy_) + (U & fvc::grad(Sxy_));
-
-    DS.component(tensor::XZ) = fvc::ddt(Sxz_) + (U & fvc::grad(Sxz_));
-
-    DS.component(tensor::YZ) = fvc::ddt(Syz_) + (U & fvc::grad(Syz_));  
-
     const volTensorField SDS 
     (
         (S & DS.T())/(2.0*magSqr(S))
     );
 
-    // Uguale ad utilizzare il metodo non conservativo se incomprimibile
-    // SDS.component(tensor::XY) = (
-    //                             Sxx_*(fvc::ddt(Sxy_) + fvc::div(this->phi(), Sxy_))
-    //                           + Sxy_*(fvc::ddt(Syy_) + fvc::div(this->phi(), Syy_))
-    //                           + Sxz_*(fvc::ddt(Syz_) + fvc::div(this->phi(), Syz_))
-    //                             )/(2.0*magSqr(S));
-    // SDS.component(tensor::XZ) = (
-    //                             Sxx_*(fvc::ddt(Sxz_) + fvc::div(this->phi(), Sxz_))
-    //                           + Sxy_*(fvc::ddt(Syz_) + fvc::div(this->phi(), Syz_))
-    //                           + Sxz_*(fvc::ddt(Szz_) + fvc::div(this->phi(), Szz_))
-    //                             )/(2.0*magSqr(S));                          
-    // SDS.component(tensor::YX) = (
-    //                             Sxy_*(fvc::ddt(Sxx_) + fvc::div(this->phi(), Sxx_))
-    //                           + Syy_*(fvc::ddt(Sxy_) + fvc::div(this->phi(), Sxy_))
-    //                           + Syz_*(fvc::ddt(Sxz_) + fvc::div(this->phi(), Sxz_))
-    //                             )/(2.0*magSqr(S));  
-    // SDS.component(tensor::YZ) = (
-    //                             Sxy_*(fvc::ddt(Sxz_) + fvc::div(this->phi(), Sxz_))
-    //                           + Syy_*(fvc::ddt(Syz_) + fvc::div(this->phi(), Syz_))
-    //                           + Syz_*(fvc::ddt(Szz_) + fvc::div(this->phi(), Szz_))
-    //                             )/(2.0*magSqr(S));  
-    // SDS.component(tensor::ZX) = (
-    //                             Sxz_*(fvc::ddt(Sxx_) + fvc::div(this->phi(), Sxx_))
-    //                           + Syz_*(fvc::ddt(Sxy_) + fvc::div(this->phi(), Sxy_))
-    //                           + Szz_*(fvc::ddt(Sxz_) + fvc::div(this->phi(), Sxz_))
-    //                             )/(2.0*magSqr(S));  
-    // SDS.component(tensor::ZY) = (
-    //                             Sxz_*(fvc::ddt(Sxy_) + fvc::div(this->phi(), Sxy_))
-    //                           + Syz_*(fvc::ddt(Syy_) + fvc::div(this->phi(), Syy_))
-    //                           + Szz_*(fvc::ddt(Syz_) + fvc::div(this->phi(), Syz_))
-    //                             )/(2.0*magSqr(S));
-
-    // Info << SDS.dimensions() << endl;
     // // Spalart-Shur curvature correction for vorticity tensor (TLLP:Eq.20)
     const volTensorField WTilde
     (
