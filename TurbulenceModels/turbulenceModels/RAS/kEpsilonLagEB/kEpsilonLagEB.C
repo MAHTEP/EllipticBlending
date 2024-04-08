@@ -330,8 +330,8 @@ kEpsilonLagEB<BasicTurbulenceModel>::kEpsilonLagEB
 
     phitMin_(dimensionedScalar("phitMin", phit_.dimensions(), VSMALL)),
     ebfMin_(dimensionedScalar("ebfMin", ebf_.dimensions(), Zero)),
-    TMin_(dimensionedScalar("TMin", dimTime, SMALL)),
-    L2Min_(dimensionedScalar("L2Min", sqr(dimLength), SMALL))
+    TMin_(dimensionedScalar("TMin", dimTime, 1e-10)),
+    L2Min_(dimensionedScalar("L2Min", sqr(dimLength), 1e-10))
 {
     bound(k_, this->kMin_);
     bound(epsilon_, this->epsilonMin_);
