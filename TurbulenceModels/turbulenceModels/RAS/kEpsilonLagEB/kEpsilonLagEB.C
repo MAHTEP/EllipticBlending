@@ -49,7 +49,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
         min
         (
             T_, 
-            1.0
+            scalar(1.0)
             /
             max
             (
@@ -71,8 +71,12 @@ tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ts() const
     return
         sqrt
         ( 
-            sqr(k_/epsilon_) + sqr(Ct_)*max(this->nu()/epsilon_,
-                dimensionedScalar(sqr(dimTime), Zero) )
+            sqr(k_/epsilon_) + sqr(Ct_)
+                *max
+                (
+                    this->nu()/epsilon_,
+                    dimensionedScalar(sqr(dimTime), Zero) 
+                )
         );
 }
 
@@ -81,16 +85,19 @@ template<class BasicTurbulenceModel>
 tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ls() const
 {
     return
-       CL_*sqrt(
-        max(pow3(k_)/sqr(epsilon_), dimensionedScalar(sqr(dimLength), Zero))
-        + sqr(Ceta_)
-        *sqrt(
-            max(
-                pow3(this->nu())/epsilon_,
-                dimensionedScalar(pow(dimLength,4), Zero)
+        CL_*sqrt
+        (
+            max(pow3(k_)/sqr(epsilon_), dimensionedScalar(sqr(dimLength), Zero))
+            + sqr(Ceta_)
+            *sqrt
+            (
+                max
+                (
+                    pow3(this->nu())/epsilon_,
+                    dimensionedScalar(pow(dimLength,4), Zero)
                 )
             )
-       );
+        );
 }
 
 
@@ -441,25 +448,25 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
 
     volSymmTensorField DS(fvc::ddt(S));
     
-    DS.component(tensor::XX) = DS.component(tensor::XX) +
-                               (U & fvc::grad(S.component(tensor::XX)));
-    DS.component(tensor::XY) = DS.component(tensor::XY) + 
-                               (U & fvc::grad(S.component(tensor::XY)));
-    DS.component(tensor::XZ) = DS.component(tensor::XZ) + 
-                               (U & fvc::grad(S.component(tensor::XZ)));
-    DS.component(tensor::YY) = DS.component(tensor::YY) + 
-                               (U & fvc::grad(S.component(tensor::YY)));
-    DS.component(tensor::YZ) = DS.component(tensor::YZ) + 
-                               (U & fvc::grad(S.component(tensor::YZ)));  
-    DS.component(tensor::ZZ) = DS.component(tensor::XZ) + 
-                               (U & fvc::grad(S.component(tensor::ZZ)));
+    DS.component(tensor::XX) = 
+        DS.component(tensor::XX) + (U & fvc::grad(S.component(tensor::XX)));
+    DS.component(tensor::XY) = 
+        DS.component(tensor::XY) + (U & fvc::grad(S.component(tensor::XY)));
+    DS.component(tensor::XZ) = 
+        DS.component(tensor::XZ) + (U & fvc::grad(S.component(tensor::XZ)));
+    DS.component(tensor::YY) = 
+        DS.component(tensor::YY) + (U & fvc::grad(S.component(tensor::YY)));
+    DS.component(tensor::YZ) = 
+        DS.component(tensor::YZ) + (U & fvc::grad(S.component(tensor::YZ)));  
+    DS.component(tensor::ZZ) = 
+        DS.component(tensor::ZZ) + (U & fvc::grad(S.component(tensor::ZZ)));
                                 
     const volTensorField SDS 
     (
         (S & DS.T())/(2.0*magSqr(S))
     );
 
-    // // Spalart-Shur curvature correction for vorticity tensor (TLLP:Eq.20)
+    // Spalart-Shur curvature correction for vorticity tensor (TLLP:Eq.20)
     const volTensorField WTilde
     (
         W - 2.0*skew(SDS)
@@ -481,14 +488,18 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     // Function for damping phit in region of low strain (TLLP:Eq.17)
     const volScalarField fmu
     (
-        (sqrt(2.0)*mag(S)*tau + pow3(ebf_)) /
-        max(sqrt(2.0)*mag(S)*tau, 1.87)
+        (sqrt(2.0)*mag(S)*tau + pow3(ebf_))/
+        max
+        (
+            sqrt(2.0)*mag(S)*tau, 
+            scalar(1.87)
+        )
     );
 
     // Coefficient using fmu (TLLP:Eq.15)
     const volScalarField Cp3
     (
-         fmu/Cmu_*(2.0/3.0 - C3_/2.0)
+         fmu/Cmu_*(scalar(2.0/3.0) - C3_/2.0)
     );
 
     // Wall-normal vectors defined through the elliptic blending factor
@@ -628,16 +639,6 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     solve(phitEqn);
     fvOptions.correct(phit_);
     bound(phit_, phitMin_);
-    
-    // Bounding phit
-    
-    // forAll(phit_, celli)
-    // {
-    //     if(phit_[celli] > 2.0)
-    //     {
-    //         phit_[celli] = 2.0;
-    //     }
-    // }
 
     correctNut();
 }
