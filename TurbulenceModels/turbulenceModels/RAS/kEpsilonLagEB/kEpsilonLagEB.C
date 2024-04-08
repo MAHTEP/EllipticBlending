@@ -49,8 +49,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
         min
         (
             T_, 
-            scalar(1.0)
-            /
+            scalar(1.0)/
             max
             (
                 dimensionedScalar(pow(dimTime,-1),VSMALL),
@@ -71,12 +70,12 @@ tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ts() const
     return
         sqrt
         ( 
-            sqr(k_/epsilon_) + sqr(Ct_)
-                *max
-                (
-                    this->nu()/epsilon_,
-                    dimensionedScalar(sqr(dimTime), Zero) 
-                )
+            sqr(k_/epsilon_) + sqr(Ct_)*
+            max
+            (
+                this->nu()/epsilon_,
+                dimensionedScalar(sqr(dimTime), Zero) 
+            )
         );
 }
 
@@ -87,9 +86,13 @@ tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ls() const
     return
         CL_*sqrt
         (
-            max(pow3(k_)/sqr(epsilon_), dimensionedScalar(sqr(dimLength), Zero))
-            + sqr(Ceta_)
-            *sqrt
+            max
+            (
+                pow3(k_)/sqr(epsilon_),
+                dimensionedScalar(sqr(dimLength), Zero)
+            )
+            + sqr(Ceta_)*
+            sqrt
             (
                 max
                 (
@@ -472,10 +475,10 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
         W - 2.0*skew(SDS)
     );
     // Anisotropy tensor (TLLP:Eq.18)
-    const dimensionedScalar beta2_ = 2.0*(1.0 - C5_)/(C1_ + C1s_ + 1.0);
+    const dimensionedScalar beta2_ = scalar(2.0)*(scalar(1.0) - C5_)/(C1_ + C1s_ + scalar(1.0));
     volTensorField A
     (
-        -2*nut/k_*(S + 2.0*beta2_*((S & WTilde) - (WTilde & S))/
+        -scalar(2.0)*nut/k_*(S + scalar(2.0)*beta2_*((S & WTilde) - (WTilde & S))/
         (mag(S + WTilde)))
     );
 
@@ -499,15 +502,18 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     // Coefficient using fmu (TLLP:Eq.15)
     const volScalarField Cp3
     (
-         fmu/Cmu_*(scalar(2.0/3.0) - C3_/2.0)
+         fmu/Cmu_*(scalar(2.0/3.0) - C3_/scalar(2.0))
     );
 
     // Wall-normal vectors defined through the elliptic blending factor
     const volVectorField n 
     (
-        fvc::grad(ebf_)/max(
-            mag(fvc::grad(ebf_)), dimensionedScalar(dimless/dimLength, SMALL)
-            )
+        fvc::grad(ebf_)/
+        max
+        (
+            mag(fvc::grad(ebf_)),
+            dimensionedScalar(dimless/dimLength, SMALL)
+        )
     );
 
     volVectorField magTermE
@@ -527,7 +533,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     // Additional production term in epsilon eq. (TLLP:Eq.7)
     const volScalarField E
     (
-        CK_*pow3(1.0 - ebf_)*this->nu()*nut*sqr(fvc::div(magTermE))
+        CK_*pow3(scalar(1.0) - ebf_)*this->nu()*nut*sqr(fvc::div(magTermE))
     );
     
     // Update epsilon and G at the wall
@@ -599,12 +605,12 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     bound(ebf_, this->ebfMin_);
 
     // Coefficients to be used in the phitEquation
-    const dimensionedScalar Cws = Ceps2_ - 1.0 + 5.0 - 1.0/Cmu_;
-    const dimensionedScalar C1Tilde = C1_ + Ceps2_ - 2.0;
-    const dimensionedScalar Cp1 = 2.0 - Ceps1_;
+    const dimensionedScalar Cws = Ceps2_ - scalar(1.0) + scalar(5.0) - scalar(1.0)/Cmu_;
+    const dimensionedScalar C1Tilde = C1_ + Ceps2_ - scalar(2.0);
+    const dimensionedScalar Cp1 = scalar(2.0) - Ceps1_;
     const dimensionedScalar Cp2 = C3s_/sqrt(2.0);
-    const dimensionedScalar C4s = 2.0/Cmu_*(1.0 - C4_);
-    const dimensionedScalar C5s = 2.0/Cmu_*(1.0 - C5_);
+    const dimensionedScalar C4s = scalar(2.0)/Cmu_*(scalar(1.0) - C4_);
+    const dimensionedScalar C5s = scalar(2.0)/Cmu_*(scalar(1.0) - C5_);
 
 // Stress-strain lag equation (TLLP:Eq.9)
     tmp<fvScalarMatrix> phitEqn
