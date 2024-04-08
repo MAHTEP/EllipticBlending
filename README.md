@@ -11,7 +11,7 @@ The model has been developed and tested in [OpenFOAM v2212](https://www.openfoam
 In the folder ```TurbulenceModels/turbulenceModels/RAS/kEpsilonLagEB``` you can find the implementation of the model in OpenFOAM.
 
 ### Test case
-In the folder ```pitzDailyLagEB``` you can find the pitzDaily case adapted for the lagEB model. You just need to run the Allrun script.
+In the folder ```BFS``` you can find the BFS case adapted for the lagEB model. You just need to run the Allrun script.
 
 ## References
 The elliptic model was originally implemented in the commercial software STAR-CCM+, and it was developed as described in the following two publications:
