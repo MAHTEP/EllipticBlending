@@ -41,20 +41,19 @@ namespace RASModels
 // Compute the turbulent viscosity (TLLP:Eq.10)
 template<class BasicTurbulenceModel>
 void kEpsilonLagEB<BasicTurbulenceModel>::correctNut()
-{   
-    volScalarField magS =
-        sqrt(2.0)*mag(symm(fvc::grad(this->U_)));
+{
+    volScalarField magS(sqrt(2.0)*mag(symm(fvc::grad(this->U_))));
 
     this->nut_ = Cmu_*phit_*k_*
         min
         (
-            T_, 
+            T_,
             scalar(1.0)/
             max
             (
                 dimensionedScalar(pow(dimTime,-1),VSMALL),
                 Cmu_.value()*sqrt(3.0)*phit_*magS
-                    
+
             )
         );
     this->nut_.correctBoundaryConditions();
@@ -69,12 +68,12 @@ tmp<volScalarField> kEpsilonLagEB<BasicTurbulenceModel>::Ts() const
 {
     return
         sqrt
-        ( 
+        (
             sqr(k_/epsilon_) + sqr(Ct_)*
             max
             (
                 this->nu()/epsilon_,
-                dimensionedScalar(sqr(dimTime), Zero) 
+                dimensionedScalar(sqr(dimTime), Zero)
             )
         );
 }
@@ -432,15 +431,15 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     bound(T_, TMin_);
 
     const volScalarField L2(type() + "L2", sqr(Ls()) + L2Min_);
- 
+
     // Compute strain, vorticity and anisotropy tensors
     tmp<volTensorField> tgradU = fvc::grad(U);
-    
+
     // Mean strain rate tensor
     const volSymmTensorField S
     (
         symm(tgradU())
-    );    
+    );
 
     // Mean vorticity tensor
     const volTensorField W
@@ -450,21 +449,21 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     tgradU.clear();
 
     volSymmTensorField DS(fvc::ddt(S));
-    
-    DS.component(tensor::XX) = 
+
+    DS.component(tensor::XX) =
         DS.component(tensor::XX) + (U & fvc::grad(S.component(tensor::XX)));
-    DS.component(tensor::XY) = 
+    DS.component(tensor::XY) =
         DS.component(tensor::XY) + (U & fvc::grad(S.component(tensor::XY)));
-    DS.component(tensor::XZ) = 
+    DS.component(tensor::XZ) =
         DS.component(tensor::XZ) + (U & fvc::grad(S.component(tensor::XZ)));
-    DS.component(tensor::YY) = 
+    DS.component(tensor::YY) =
         DS.component(tensor::YY) + (U & fvc::grad(S.component(tensor::YY)));
-    DS.component(tensor::YZ) = 
-        DS.component(tensor::YZ) + (U & fvc::grad(S.component(tensor::YZ)));  
-    DS.component(tensor::ZZ) = 
+    DS.component(tensor::YZ) =
+        DS.component(tensor::YZ) + (U & fvc::grad(S.component(tensor::YZ)));
+    DS.component(tensor::ZZ) =
         DS.component(tensor::ZZ) + (U & fvc::grad(S.component(tensor::ZZ)));
-                                
-    const volTensorField SDS 
+
+    const volTensorField SDS
     (
         (S & DS.T())/(2.0*magSqr(S))
     );
@@ -494,7 +493,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
         (sqrt(2.0)*mag(S)*tau + pow3(ebf_))/
         max
         (
-            sqrt(2.0)*mag(S)*tau, 
+            sqrt(2.0)*mag(S)*tau,
             scalar(1.87)
         )
     );
@@ -506,7 +505,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     );
 
     // Wall-normal vectors defined through the elliptic blending factor
-    const volVectorField n 
+    const volVectorField n
     (
         fvc::grad(ebf_)/
         max
@@ -535,7 +534,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     (
         CK_*pow3(scalar(1.0) - ebf_)*this->nu()*nut*sqr(fvc::div(magTermE))
     );
-    
+
     // Update epsilon and G at the wall
     epsilon_.boundaryFieldRef().updateCoeffs();
 
@@ -548,11 +547,11 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
       - fvm::laplacian(alpha*rho*DepsilonEff(), epsilon_)
       ==
       - fvm::SuSp
-        (   
+        (
             alpha()*rho()*Ceps1_*
             (
                 - G()/k_()
-                + 2.0/3.0*divU 
+                + 2.0/3.0*divU
             ),
             epsilon_
         )
@@ -560,7 +559,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
       + alpha()*rho()*E()
       + fvOptions(alpha, rho, epsilon_)
     );
-    
+
     epsEqn.ref().relax();
     fvOptions.constrain(epsEqn.ref());
     epsEqn.ref().boundaryManipulate(epsilon_.boundaryFieldRef());
@@ -633,7 +632,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
         )
         + alpha()*rho()*
         (
-            pow3(ebf_())/tau()/(2.0*magSqr(S()))*((C4s*(A() & S()) 
+            pow3(ebf_())/tau()/(2.0*magSqr(S()))*((C4s*(A() & S())
                 - C5s*(A() & WTilde())) && S())
             + pow3(ebf_())*Cp3()/tau()
         )

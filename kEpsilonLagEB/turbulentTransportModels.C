@@ -2,11 +2,10 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | www.openfoam.com
+    \\  /    A nd           |
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
-    Copyright (C) 2013-2016 OpenFOAM Foundation
-    Copyright (C) 2022 OpenCFD Ltd.
+    Copyright (C) 2024 OpenCFD Ltd.
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
@@ -30,41 +29,8 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// defineTurbulenceModelTypes
-// (
-//     geometricOneField,
-//     geometricOneField,
-//     incompressibleTurbulenceModel,
-//     IncompressibleTurbulenceModel,
-//     transportModel
-// );
-
-// makeBaseTurbulenceModel
-// (
-//     geometricOneField,
-//     geometricOneField,
-//     incompressibleTurbulenceModel,
-//     IncompressibleTurbulenceModel,
-//     transportModel
-// );
-
-
-// -------------------------------------------------------------------------- //
-// Laminar models
-// -------------------------------------------------------------------------- //
-
-// -------------------------------------------------------------------------- //
-// RAS models
-// -------------------------------------------------------------------------- //
-
-//#include "kEpsilonEB.H"
-//makeRASModel(kEpsilonEB);
-
 #include "kEpsilonLagEB.H"
-makeRASModel(kEpsilonLagEB);
 
-// -------------------------------------------------------------------------- //
-// LES models
-// -------------------------------------------------------------------------- //
+makeRASModel(kEpsilonLagEB);
 
 // ************************************************************************* //
