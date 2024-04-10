@@ -8,9 +8,9 @@
      #{
          // Lookup U
          const volVectorField& U = mesh().lookupObject<volVectorField>("U");
-         const volTensorField gradU = fvc::grad(U);
-         const volTensorField S = 0.5*(gradU + gradU.T());
-         const volScalarField STilde_ = sqrt(2*S && S);
+         const volTensorField gradU(fvc::grad(U));
+         const volTensorField S(0.5*(gradU + gradU.T()));
+         const volScalarField STilde_(sqrt(2*S && S));
 
          // Write
          volScalarField STilde
@@ -25,7 +25,7 @@
              ),
          STilde_
          );
-         
+
          STilde().write();
      #};
 

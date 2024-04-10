@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2212                                 |
+|  \\    /   O peration     | Version:  v2401                                 |
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -13,6 +13,11 @@ FoamFile
     object      controlDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+libs
+(
+    "libEllipticBlendingTurbulenceModel.so"
+);
 
 application     simpleFoam;
 
@@ -54,6 +59,5 @@ functions
     #includeFunc "wallShearStress"
     #includeFunc "Stilde"
 }
-libs ("libmyIncompressibleTurbulenceModels.so");
 
 // ************************************************************************* //

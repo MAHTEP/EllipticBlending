@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2212                                 |
+|  \\    /   O peration     | Version:  v2401                                 |
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -9,43 +9,20 @@ FoamFile
 {
     version     2.0;
     format      ascii;
-    class       volVectorField;
-    object      U;
+    class       dictionary;
+    object      turbulenceProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 1 -1 0 0 0 0];
+simulationType      RAS;
 
-internalField   uniform (1e-8 0 0);
-
-boundaryField
+RAS
 {
-    inlet
-    {
-        type            fixedValue;
-        value           uniform (44.2 0 0);
-    }
+    RASModel        kEpsilonLagEB;
 
-    outlet
-    {
-        type            zeroGradient;
-    }
+    turbulence      on;
 
-    "(lowerWallStartup|upperWallStartup)"
-    {
-        type            symmetryPlane;
-    }
-
-    "(upperWall|lowerWall)"
-    {
-        type            noSlip;
-    }
-
-    "(front|back)"
-    {
-        type            empty;
-    }
+    printCoeffs     on;
 }
-
 
 // ************************************************************************* //

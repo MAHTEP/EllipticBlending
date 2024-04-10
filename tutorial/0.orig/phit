@@ -1,7 +1,7 @@
 /*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  v2212                                 |
+|  \\    /   O peration     | Version:  v2401                                 |
 |   \\  /    A nd           | Website:  www.openfoam.com                      |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -10,29 +10,26 @@ FoamFile
     version     2.0;
     format      ascii;
     class       volScalarField;
-    object      epsilon;
+    object      phit;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -3 0 0 0 0];
+dimensions      [0 0 0 0 0 0 0];
 
-internalField   uniform 17.83;
+internalField   uniform 0.666;
 
 boundaryField
 {
     inlet
     {
-
-        type            turbulentMixingLengthDissipationRateInlet;
-        mixingLength    0.01;       
+        type            fixedValue;
         value           $internalField;
     }
-
     outlet
     {
         type            zeroGradient;
     }
-
+    
     "(lowerWallStartup|upperWallStartup)"
     {
         type            symmetryPlane;
@@ -40,17 +37,15 @@ boundaryField
 
     "(upperWall|lowerWall)"
     {
-        type            epsilonWallFunction;
-        lowReCorrection true;
-        value           $internalField;
-
+        type            fixedValue;
+        value           uniform 0;
     }
 
     "(front|back)"
     {
         type            empty;
     }
-}
 
+}
 
 // ************************************************************************* //
