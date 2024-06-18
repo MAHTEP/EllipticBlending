@@ -20,5 +20,8 @@ The elliptic model was originally implemented in the commercial software STAR-CC
       
 [2] [AN ELLIPTIC BLENDING LAG MODEL FOR FLOWS IN THERMAL-HYDRAULICS SYSTEMS](https://www.researchgate.net/publication/308413285_AN_ELLIPTIC_BLENDING_LAG_MODEL_FOR_FLOWS_IN_THERMAL-HYDRAULICS_SYSTEMS), R. Tunstall, S. Lardeau et al. (2016)
 
+## Author
+The code has been developed by Eleonora Gajetti, with the help of prof. Luca Marocco. Contact emails: eleonora.gajetti@polito.it
+
 
     
