@@ -448,7 +448,7 @@ void kEpsilonLagEB<BasicTurbulenceModel>::correct()
     );
     tgradU.clear();
 
-    const volSymmTensorField DSDiv_ = fvc::ddt(S) + fvc::div(this->phi(), S) - S * fvc::div(U);
+    const volSymmTensorField DSDiv_(fvc::ddt(S) + fvc::div(this->phi(), S) - S * fvc::div(U));
                                 
     const volTensorField SDS 
     (
