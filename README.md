@@ -8,7 +8,7 @@ The model has been developed and tested in [OpenFOAM v2212](https://www.openfoam
 ## Usage
 
 ### Model source code
-In the folder ```kEpsilonLagEB/kEpsilonLagEB``` you can find the implementation of the model in OpenFOAM.
+In the folder ```kEpsilonLagEB``` you can find the implementation of the model in OpenFOAM.
 
 ### Test case
 In the folder ```BFS``` you can find the BFS case adapted for the lagEB model. You just need to run the Allrun script.
