@@ -9,6 +9,7 @@ EXE_INC =\
 
 LIB_LIBS =\
     -lturbulenceModels \
-    -lOpenFOAM \
+    -lfiniteVolume \
     -lmeshTools \
-    -lincompressibleTransportModels
+    -lincompressibleTransportModels \
+    -lincompressibleTurbulenceModels
